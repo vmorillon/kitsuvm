@@ -1,0 +1,6 @@
+# Generated files
+/target
+Cargo.lock
+
+# Dummy output
+test_out.sv
