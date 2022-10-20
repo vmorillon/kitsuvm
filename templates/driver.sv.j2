@@ -1,5 +1,5 @@
-{% import "generic_function.sv" as gen_funct %}
-{% extends "base_template.sv" %}
+{% import "generic_function.sv.j2" as gen_funct %}
+{% extends "base_template.sv.j2" %}
 
 {% block class_def %}
 class {{ class.name }} extends uvm_test;
@@ -25,8 +25,8 @@ endclass: {{ class.name }}
 
 {% block post_class_def %}
 {%- for function in class.functions -%}
-{% if not function.is_declared_internally -%}
-{{ gen_funct::generate_extern_function(funct = function, class_name = class.name) }}
+{%- if not function.is_declared_internally -%}
+{{- gen_funct::generate_extern_function(funct = function, class_name = class.name) -}}
 {%- endif %}
 {%- endfor -%}
 {% endblock post_class_def %}

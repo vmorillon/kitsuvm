@@ -1,5 +1,5 @@
-{% import "generic_variable.sv" as gen_var %}
-{% import "text_utils.sv" as text_utils %}
+{% import "generic_variable.sv.j2" as gen_var %}
+{% import "text_utils.sv.j2" as text_utils %}
 
 {% macro generate_function(funct) %}
   function {{ funct.name }}(

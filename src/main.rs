@@ -1,11 +1,10 @@
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
-use std::path::PathBuf;
 use serde::Serialize;
-use sv_parser::{parse_sv, unwrap_node, Locate, RefNode};
 use tera::Tera;
+
+use kitsuvm_poc::dut_parser;
 
 #[derive(Serialize, Debug)]
 struct Variable {
@@ -29,36 +28,13 @@ struct Class {
 
 fn main() {
     let path = "fifo.sv";
-    let defines = HashMap::new();
-    let includes: Vec<PathBuf> = Vec::new();
 
-    let result = parse_sv(&path, &defines, &includes, false, false);
+    dut_parser::parse_dut(path);
 
-    if let Ok((syntax_tree, _def)) = result {
-        for node in &syntax_tree {
-            match node {
-                RefNode::ModuleDeclarationAnsi(x) => {
-                    let id = unwrap_node!(x, ModuleIdentifier).unwrap();
-                    let id = get_identifier(id).unwrap();
-                    let id = syntax_tree.get_str(&id).unwrap();
-                    println!("module: {}", id);
-                }
-                RefNode::AnsiPortDeclarationNet(x) => {
-                    let id = unwrap_node!(x, PortIdentifier).unwrap();
-                    let id = get_identifier(id).unwrap();
-                    let id = syntax_tree.get_str(&id).unwrap();
-                    println!("port: {}", id);
-                }
-                _ => (),
-            }
-        }
-    } else {
-        println!("parse failed");
-    }
-
-    let mut tera = Tera::new("templates/*.sv").unwrap();
+    let mut tera = Tera::new("templates/*.sv.j2").unwrap();
     tera.autoescape_on(vec![]);
 
+    /*
     let class = Class {
         name: "not_base_test".to_string(),
         members: vec![Variable { name: "int val".to_string() }, Variable { name: "bool is_valid".to_string() }],
@@ -111,17 +87,6 @@ fn main() {
             }
         }
     };
+    */
 }
 
-fn get_identifier(node: RefNode) -> Option<Locate> {
-    // unwrap_node! can take multiple types
-    match unwrap_node!(node, SimpleIdentifier, EscapedIdentifier) {
-        Some(RefNode::SimpleIdentifier(x)) => {
-            return Some(x.nodes.0);
-        }
-        Some(RefNode::EscapedIdentifier(x)) => {
-            return Some(x.nodes.0);
-        }
-        _ => None,
-    }
-}

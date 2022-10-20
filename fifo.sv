@@ -33,5 +33,4 @@ module fifo (
       void'(q16.pop_front());
     end
   end
-
 endmodule
