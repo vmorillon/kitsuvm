@@ -1,54 +1,114 @@
 use std::path::{Path,PathBuf};
 use std::collections::HashMap;
-use sv_parser::{parse_sv, unwrap_node, Locate, Number, Bracket, ConstantRange, ConstantExpression, RefNode};
+use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclarationAnsi, AnsiPortDeclaration, PortDirection};
 
-pub fn parse_dut<T: AsRef<Path>>(path: T) {
+use crate::uvm::th::{DUT, Port, PortProperties, PortDirection as PortDir};
+
+pub fn parse_dut<T: AsRef<Path>>(path: T) -> DUT {
     let defines = HashMap::new();
     let includes: Vec<PathBuf> = Vec::new();
 
-    let result = parse_sv(&path, &defines, &includes, false, false);
+    let (syntax_tree, _def) = parse_sv(&path, &defines, &includes, false, false).expect("failed to parse DUT file");
 
-    if let Ok((syntax_tree, _def)) = result {
-        for node in &syntax_tree {
-            match node {
-                RefNode::ModuleDeclarationAnsi(x) => {
-                    let id = unwrap_node!(x, ModuleIdentifier).unwrap();
-                    //println!("{:#?}", x);
-                    let id = get_identifier(id).unwrap();
-                    let id = syntax_tree.get_str(&id).unwrap();
-                    println!("module: {}", id);
+    let dut = get_dut(&syntax_tree).expect("DUT not found in file");
+    dut
+}
 
-                    for p in x {
-                        match p {
-                            RefNode::AnsiPortDeclaration(po) => {
-                                let port = unwrap_node!(po, PortIdentifier).unwrap();
-                                let id = get_identifier(port).unwrap();
-                                let id = syntax_tree.get_str(&id).unwrap();
-                                println!("port: {}", id);
+fn get_dut(syntax_tree: &SyntaxTree) -> Option<DUT> {
+    for n in syntax_tree {
+        match n {
+            RefNode::ModuleDeclarationAnsi(x) => {
+                let name = get_dut_name(syntax_tree, x);
+                let ports = get_ports(syntax_tree, x);
 
-                                if let Some(range) = unwrap_node!(po, PackedDimensionRange) {
-                                    let (range_end, range_start) = get_range(range).unwrap();
-                                    //println!("{:#?}", range_end);
-                                    let str_start = syntax_tree.get_str(&range_start).unwrap();
-                                    let str_end = syntax_tree.get_str(&range_end).unwrap();
-                                    let num_start = str_start.parse::<u32>().unwrap();
-                                    let num_end = str_end.parse::<u32>().unwrap();
-                                    println!("range: {} {}", num_end, num_start);
-                                }
-                                //println!("port! {:?}", po);
-                            },
-                            _ => ()
-                        }
-                    }
-                }
-                _ => (),
+                return Some(DUT { name, ports });
             }
+            _ => (),
         }
-        //println!("{}", syntax_tree);
-        //println!("{syntax_tree}");
-    } else {
-        println!("parse failed");
     }
+    None
+}
+
+fn get_dut_name(syntax_tree: &SyntaxTree, module: &ModuleDeclarationAnsi) -> String {
+    let id = unwrap_node!(module, ModuleIdentifier).unwrap();
+    let port_locate = get_identifier(id);
+    let name = syntax_tree.get_str(&port_locate).unwrap().to_string();
+
+    name
+}
+
+fn get_ports(syntax_tree: &SyntaxTree, module: &ModuleDeclarationAnsi) -> HashMap<String, PortProperties> {
+    let mut ports = HashMap::new();
+    for n in module {
+        match n {
+            RefNode::AnsiPortDeclaration(x) => {
+                let port = get_port(syntax_tree, x);
+                ports.insert(port.name, port.properties);
+            }
+            _ => ()
+        }
+    }
+    ports
+}
+
+fn get_port(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Port {
+    let name = get_port_name(syntax_tree, port);
+
+    let dimensions = get_dimensions(syntax_tree, port);
+    let direction = get_direction(port);
+
+    let properties = PortProperties { direction, dimensions };
+
+    let port = Port { name, properties };
+    port
+}
+
+fn get_port_name(syntax_tree: &SyntaxTree, module: &AnsiPortDeclaration) -> String {
+    let id = unwrap_node!(module, PortIdentifier).unwrap();
+    let port_locate = get_identifier(id);
+    let name = syntax_tree.get_str(&port_locate).unwrap().to_string();
+
+    name
+}
+
+fn get_dimensions(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Vec<(u32,u32)> {
+    let mut dimensions = Vec::new();
+    for n in port {
+        match n {
+            RefNode::ConstantRange(x) => {
+                let end = syntax_tree.get_str(&x.nodes.0.clone()).unwrap();
+                let end = end.parse().unwrap();
+                let start = syntax_tree.get_str(&x.nodes.2.clone()).unwrap();
+                let start = start.parse().unwrap();
+                dimensions.push((end,start));
+            }
+            _ => ()
+        }
+    }
+    dimensions
+}
+
+fn get_direction(port: &AnsiPortDeclaration) -> PortDir {
+    for n in port {
+        match n {
+            RefNode::PortDirection(x) => {
+                match x {
+                    PortDirection::Input(_) => {
+                        return PortDir::INPUT;
+                    }
+                    PortDirection::Output(_) => {
+                        return PortDir::OUTPUT;
+                    }
+                    PortDirection::Inout(_) => {
+                        return PortDir::INOUT;
+                    }
+                    _ => ()
+                }
+            }
+            _ => ()
+        }
+    }
+    PortDir::INOUT
 }
 
 fn get_identifier(node: RefNode) -> Option<Locate> {
@@ -59,15 +119,6 @@ fn get_identifier(node: RefNode) -> Option<Locate> {
         }
         Some(RefNode::EscapedIdentifier(x)) => {
             return Some(x.nodes.0);
-        }
-        _ => None,
-    }
-}
-
-fn get_range(node: RefNode) -> Option<(ConstantExpression, ConstantExpression)> {
-    match unwrap_node!(node, ConstantRange) {
-        Some(RefNode::ConstantRange(x)) => {
-            return Some((x.nodes.0.clone(), x.nodes.2.clone()));
         }
         _ => None,
     }
