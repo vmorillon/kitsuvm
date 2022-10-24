@@ -3,4 +3,6 @@
 Cargo.lock
 
 # Dummy output
+common.toml
+pinlist.toml
 test_out.sv

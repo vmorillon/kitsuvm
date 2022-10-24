@@ -2,11 +2,14 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
 
-use confy;
-use serde::Serialize;
+use clap::Parser;
+use serde::{Deserialize, Serialize};
 use tera::Tera;
+use toml;
 
+use kitsuvm_poc::config::{common, template};
 use kitsuvm_poc::dut_parser;
 use kitsuvm_poc::uvm;
 /*
@@ -30,35 +33,104 @@ struct Class {
     functions: Vec<Function>,
 }
 */
-#[derive(Serialize, Debug)]
-struct AgentInterfaceConfig {
-    agent_name: String,
-    agent_is_active: bool,
-    number_of_instance: u32,
-
-    item_name: String,
-    item_members: HashSet<String>,
-    item_constraints: HashSet<String>,
-
-    interfaces_port: HashSet<String>,
-    interface_clock: String,
+/*
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(deny_unknown_fields)]
+struct PinList {
+    #[serde(default = "default_top_dec")]
+    top_wire_dec: HashSet<String>,
+    #[serde(default = "default_top_dec")]
+    top_param_dec: HashSet<String>,
+    global_map: HashMap<String, String>,
+    interface_map: HashMap<String, HashMap<String, String>>,
 }
 
-#[derive(Serialize, Debug)]
-struct CommonConfig {
-    dut_path: String,
-    generate_file_header: bool,
-    top_default_sequence: u32,
+fn default_top_dec() -> HashSet<String> {
+    HashSet::new()
+}
+*/
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Relative path to common config file
+    #[arg(short, long, default_value = "./common.toml" )]
+    common: String,
+    /// Relative path to pinlist file
+    #[arg(short, long, default_value = "./pinlist.toml" )]
+    pinlist: String,
+
+    /// Relative path to template files
+    #[arg(required = true)]
+    templates: Vec<String>,
 }
 
 fn main() {
+    let cli = Args::parse();
 
-    let cfg = CommonConfig {
+    println!("{:#?}", cli);
+/*
+    let cfg = common::Common {
         dut_path: "fifo.sv".to_string(),
-        generate_file_header: true,
+        generate_file_header: false,
         top_default_sequence: 10,
     };
-    confy::store_path("common.toml", &cfg).unwrap();
+    let common = toml::to_string(&cfg).unwrap();
+    println!("{}", common);
+
+    let common_file = std::fs::read_to_string("common.toml").unwrap();
+    let cfg: common::Common = toml::from_str(&common_file).unwrap();
+    println!("{:#?}", cfg);
+*/
+/*
+    let pl = PinList {
+        top_wire_dec: HashSet::from(["[31:0] random_top_signal".to_string()]),
+        top_param_dec: HashSet::from(["my_param 52".to_string()]),
+        global_map: HashMap::from([("clk".to_string(), "clock".to_string())]),
+        interface_map: HashMap::from([
+            ("agent_test_0".to_string(), HashMap::from([
+                ("data_rdy".to_string(),"data_rdy_0".to_string()),
+                ("data_vld".to_string(),"data_vld_0".to_string()),
+                ("data".to_string(),"data_0".to_string()),
+            ])),
+            ("agent_test_1".to_string(), HashMap::from([
+                ("data_rdy".to_string(),"data_rdy_1".to_string()),
+                ("data_vld".to_string(),"data_vld_1".to_string()),
+                ("data".to_string(),"data_1".to_string()),
+            ])),
+        ]),
+    };
+    let pinlist = toml::to_string(&pl).unwrap();
+    println!("{}", pinlist);
+    
+    let pinlist_file = std::fs::read_to_string("pinlist.toml").unwrap();
+    let pl: PinList = toml::from_str(&pinlist_file).unwrap();
+    println!("{:#?}", pl);
+*/
+/*
+    let tpl = template::Template {
+        agent: template::agent::Agent {
+            name: "agent_test".to_string(),
+            is_active: true,
+            number_of_instances: 2,
+        },
+        interface: template::interface::Interface {
+            ports: HashSet::from(["data_vld".to_string(), "data_rdy".to_string(), "data [31:0]".to_string()]),
+            clock: "clk".to_string(),
+            reset: "rst".to_string(),
+            use_clock_block: true,
+        },
+        item: template::item::Item {
+            name: "item_test".to_string(),
+            members: HashSet::from(["rand bit[31:0] data".to_string(), "rand int delay".to_string()]),
+            constraints: HashSet::from(["delay inside {[1:100]}".to_string()]),
+        },
+    };
+    let template = toml::to_string(&tpl).unwrap();
+    println!("{}", template);
+*/
+    //let tpl: template::Template = toml::from_str("").unwrap();
+    //println!("{:#?}", tpl);
     //let yaml = serde_yaml::to_string(&cfg).unwrap();
     //println!("{}", yaml);
 /*

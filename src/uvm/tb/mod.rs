@@ -1,7 +1,3 @@
-pub struct Test {
-    env: Env,
-}
-
 pub struct EnvConfig {
 
 }
