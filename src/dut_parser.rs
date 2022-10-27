@@ -1,16 +1,19 @@
-use std::path::{Path,PathBuf};
+use std::path::PathBuf;
 use std::collections::HashMap;
+use log::{debug, info};
 use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclarationAnsi, AnsiPortDeclaration, PortDirection};
 
 use crate::uvm::th::{DUT, Port, PortProperties, PortDirection as PortDir};
 
-pub fn parse_dut<T: AsRef<Path>>(path: T) -> DUT {
+pub fn parse_dut(path: String) -> DUT {
+    info!("parsing dut {}", path);
     let defines = HashMap::new();
     let includes: Vec<PathBuf> = Vec::new();
 
     let (syntax_tree, _def) = parse_sv(&path, &defines, &includes, false, false).expect("failed to parse DUT file");
 
     let dut = get_dut(&syntax_tree).expect("DUT not found in file");
+    debug!("dut parsed:\n{:#?}", dut);
     dut
 }
 

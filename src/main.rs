@@ -5,13 +5,15 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::Parser;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 use toml;
 
-use kitsuvm_poc::config::{common, template};
+use kitsuvm_poc::cli;
+use kitsuvm_poc::config::{parse_config_files, common, pinlist, template};
 use kitsuvm_poc::dut_parser;
-use kitsuvm_poc::uvm;
+use kitsuvm_poc::uvm::{tb, th};
 /*
 #[derive(Serialize, Default, Debug)]
 struct Variable {
@@ -33,42 +35,22 @@ struct Class {
     functions: Vec<Function>,
 }
 */
-/*
-#[derive(Deserialize, Serialize, Debug)]
-#[serde(deny_unknown_fields)]
-struct PinList {
-    #[serde(default = "default_top_dec")]
-    top_wire_dec: HashSet<String>,
-    #[serde(default = "default_top_dec")]
-    top_param_dec: HashSet<String>,
-    global_map: HashMap<String, String>,
-    interface_map: HashMap<String, HashMap<String, String>>,
-}
-
-fn default_top_dec() -> HashSet<String> {
-    HashSet::new()
-}
-*/
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Relative path to common config file
-    #[arg(short, long, default_value = "./common.toml" )]
-    common: String,
-    /// Relative path to pinlist file
-    #[arg(short, long, default_value = "./pinlist.toml" )]
-    pinlist: String,
-
-    /// Relative path to template files
-    #[arg(required = true)]
-    templates: Vec<String>,
-}
 
 fn main() {
-    let cli = Args::parse();
+    env_logger::init();
+    debug!("starting up");
 
-    println!("{:#?}", cli);
+    debug!("parsing cli");
+    let cli = cli::Args::parse();
+    debug!("cli parsed:\n{:#?}", cli);
+
+    let (common, pinlist, templates) = parse_config_files(cli);
+
+    let dut = dut_parser::parse_dut(common.dut_path);
+
+    let th = th::build(dut, pinlist, templates);
+    th.check_pinlists().unwrap();
+
 /*
     let cfg = common::Common {
         dut_path: "fifo.sv".to_string(),

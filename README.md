@@ -8,31 +8,31 @@ Relies on [tera](https://github.com/Keats/tera) (template engine), [toml-rs](htt
 
 ```mermaid
 flowchart LR
-  CLI[CLI] -->|config files override| TomlParser[TOML Parser]
+  CLI[CLI] -->|config files paths| TomlParser[TOML Parser]
   ConfigFiles --o TomlParser
   subgraph ConfigFiles[Config Files]
     direction LR
-    Common[common.toml]
-    PinList[pinlist.toml]
-    ITemplate[[interface_tpl.toml]]
+    Common[./common.toml]
+    PinList[./pinlist.toml]
+    ITemplate[[./interface_tpl.toml]]
   end
 
-  TomlParser -->|generate| UVM[KitsUVM]
+  TomlParser -->|generates| UVM[KitsUVM]
   TomlParser -->|DUT path| SVParser[SV Parser]
 
   DUT --o SVParser
   subgraph DUT[DUT File]
-    DUTFile[dut.sv]
+    DUTFile[./dut.sv]
   end
   SVParser -->|DUT/interfaces compat| UVM
 
-  UVM -->|drive| Tera[Template engine]
+  UVM -->|drives| Tera[Template engine]
   TemplateFiles --o Tera
   subgraph TemplateFiles[Template Files]
-    TemplateDir[[./template/*.sv.j2]]
+    TemplateDir[[./templates/*.sv.j2]]
   end
 
-  Tera -->|create| Project[UVM Project]
+  Tera -->|creates| Project[UVM Project]
 ```
 
 # Install

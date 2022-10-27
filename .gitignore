@@ -1,8 +1,8 @@
 # Generated files
 /target
 Cargo.lock
+!Cargo.toml
 
 # Dummy output
-common.toml
-pinlist.toml
+*.toml
 test_out.sv
