@@ -10,7 +10,7 @@ pub struct TestHarness {
 
 use crate::config::{template, pinlist};
 
-pub fn build(dut: DUT, pinlist: pinlist::PinList, templates: Vec<template::Template>) -> TestHarness {
+pub fn build(dut: &DUT, pinlist: &pinlist::PinList, templates: &Vec<template::Template>) -> TestHarness {
     info!("generating test harness");
     let mut interfaces = HashMap::new();
 
@@ -51,7 +51,7 @@ pub fn build(dut: DUT, pinlist: pinlist::PinList, templates: Vec<template::Templ
 
     let th = TestHarness {
         interfaces,
-        dut,
+        dut: dut.clone(),
     };
     debug!("test harness generated:\n{:#?}", th);
     th
@@ -108,7 +108,7 @@ impl Interface {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct DUT {
     pub name: String,
     pub ports: HashMap<String, PortProperties>,
@@ -134,7 +134,7 @@ impl Not for PortDirection {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct PortProperties {
     pub direction: PortDirection,
     pub dimensions: Vec<(u32,u32)>,

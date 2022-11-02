@@ -5,7 +5,7 @@ use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclar
 
 use crate::uvm::th::{DUT, Port, PortProperties, PortDirection as PortDir};
 
-pub fn parse_dut(path: String) -> DUT {
+pub fn parse_dut(path: &String) -> DUT {
     info!("parsing dut {}", path);
     let defines = HashMap::new();
     let includes: Vec<PathBuf> = Vec::new();

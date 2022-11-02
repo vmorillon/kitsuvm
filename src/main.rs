@@ -15,7 +15,7 @@ use kitsuvm_poc::config::{parse_config_files, common, pinlist, template};
 use kitsuvm_poc::dut_parser;
 use kitsuvm_poc::uvm::{tb, th};
 /*
-#[derive(Serialize, Default, Debug)]
+#[derive(Serialize, Debug)]
 struct Variable {
     name: String,
 }
@@ -35,7 +35,6 @@ struct Class {
     functions: Vec<Function>,
 }
 */
-
 fn main() {
     env_logger::init();
     debug!("starting up");
@@ -46,11 +45,17 @@ fn main() {
 
     let (common, pinlist, templates) = parse_config_files(cli);
 
-    let dut = dut_parser::parse_dut(common.dut_path);
+    let dut = dut_parser::parse_dut(&common.dut_path);
 
-    let th = th::build(dut, pinlist, templates);
+    let th = th::build(&dut, &pinlist, &templates);
     th.check_pinlists().unwrap();
 
+    let tb = tb::build(&common, &templates);
+/*
+    let templates_path = "templates/**/*.sv.j2";
+    let mut tera_dir = Tera::new(templates_path).unwrap();
+    tera_dir.autoescape_on(vec![]);
+*/
 /*
     let cfg = common::Common {
         dut_path: "fifo.sv".to_string(),
@@ -125,11 +130,8 @@ fn main() {
     };
     println!("{:#?}", th);
 */
-/*
-    let templates_path = "templates/**/*.sv.j2";
-    let mut tera_dir = Tera::new(templates_path).unwrap();
-    tera_dir.autoescape_on(vec![]);
 
+/*
     let class = Class {
         name: "not_base_test".to_string(),
         members: vec![Variable { name: "int val".to_string() }, Variable { name: "bool is_valid".to_string() }],
@@ -172,11 +174,11 @@ fn main() {
     context.insert("project_name", "better_easier_uvm");
     context.insert("header", &true);
 
-    match tera_dir.render("driver.sv", &context) {
+    match tera_dir.render("driver.sv.j2", &context) {
         Ok(render) => {
             println!("{}", render);
             let mut file = File::create("test_out.sv").unwrap();
-            file.write_all(render.as_bytes());
+            file.write_all(render.as_bytes()).unwrap();
         },
         Err(e) => {
             println!("Error: {}", e);
