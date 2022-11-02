@@ -4,5 +4,4 @@ Cargo.lock
 !Cargo.toml
 
 # Dummy output
-*.toml
 test_out.sv

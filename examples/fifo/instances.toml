@@ -1,0 +1,16 @@
+[[instances]]
+vip_name = "fifo_in"
+connected_to = [
+  "data_in",
+  "data_in_vld",
+  "data_in_rdy"
+]
+
+[[instances]]
+vip_name = "fifo_out"
+connected_to = [
+  "data_out",
+  "data_out_vld",
+  "data_out_rdy"
+]
+mode = "Responder"

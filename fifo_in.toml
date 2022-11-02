@@ -1,0 +1,16 @@
+[agent]
+name = "fifo_in"
+is_active = true
+number_of_instances = 1
+
+[interface]
+ports = ["data [31:0]", "data_vld", "data_rdy"]
+clock = "clk"
+reset = "rst"
+use_clock_block = true
+
+[item]
+name = "item"
+members = ["rand bit[31:0] data", "rand int delay"]
+constraints = ["delay inside {[1:100]}"]
+

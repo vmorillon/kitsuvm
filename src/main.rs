@@ -5,13 +5,13 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::Parser;
-use log::{debug, info};
+use log::{trace, debug, info};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 use toml;
 
 use kitsuvm_poc::cli;
-use kitsuvm_poc::config::{parse_config_files, common, pinlist, template};
+use kitsuvm_poc::config::{parse_config_files, check_instances_vip_compat, project::Project, pinlist, vip::{VIP, Item}, instance::{Instances, Instance, Mode}};
 use kitsuvm_poc::dut_parser;
 use kitsuvm_poc::uvm::{tb, th};
 /*
@@ -41,16 +41,69 @@ fn main() {
 
     debug!("parsing cli");
     let cli = cli::Args::parse();
-    debug!("cli parsed:\n{:#?}", cli);
+    trace!("cli parsed:\n{:#?}", cli);
 
-    let (common, pinlist, templates) = parse_config_files(cli);
+    let (project, mut instances, templates) = parse_config_files(cli);
+    instances.estimate_ids();
+    check_instances_vip_compat(&instances, &templates);
 
-    let dut = dut_parser::parse_dut(&common.dut_path);
+    let dut = dut_parser::parse_dut(&project.dut.path);
 
+    /*
+    let project_str = "".to_string();
+    let cfg: Project = toml::from_str(&project_str).unwrap();
+    println!("{:#?}", cfg);
+    let project_str = toml::to_string(&cfg).unwrap();
+    println!("{}", project_str);
+    */
+    /*
+    let fifo_in_vip = VIP {
+        name: "fifo_in".to_string(),
+        ports: Vec::from(["aaa".to_string(), "bbb".to_string()]),
+        clock: Some("clk".to_string()),
+        reset: None,
+        use_clock_block: true,
+        item: Default::default(),
+    };
+    let fifo_in_vip_str = toml::to_string(&fifo_in_vip).unwrap();
+    println!("{}", fifo_in_vip_str);
+    let fifo_in_vip_str = std::fs::read_to_string("examples/fifo/fifo_in.toml").unwrap();
+    let fifo_in_vip: VIP = toml::from_str(&fifo_in_vip_str).unwrap();
+    println!("{:#?}", fifo_in_vip);
+    */
+    /*
+    let instance_in = Instance {
+        vip_name: "fifo_in".to_string(),
+        connected_to: Vec::from(["aaa".to_string(), "bbb".to_string()]),
+        id: None,
+        mode: Mode::Controller,
+    };
+    let instance_out = Instance {
+        vip_name: "fifo_out".to_string(),
+        connected_to: Vec::from(["aaa".to_string(), "bbb".to_string()]),
+        id: None,
+        mode: Mode::Responder,
+    };
+    let instances: Instances = vec![instance_in, instance_out].into();
+    let instances_str = toml::to_string(&instances).unwrap();
+    println!("{}", instances_str);
+
+    let instances_str = std::fs::read_to_string("examples/fifo/instances.toml").unwrap();
+    let mut instances: Instances = toml::from_str(&instances_str).unwrap();
+    println!("{:#?}", instances);
+    instances.estimate_ids();
+    println!("{:#?}", instances);
+*/
+    /*
+    let fifo_in_instances = instances.instances.iter().filter(|i| i.vip_name == "fifo_out").collect::<Vec<_>>();
+    println!("{:#?}", fifo_in_instances);
+*/
+    /*
     let th = th::build(&dut, &pinlist, &templates);
     th.check_pinlists().unwrap();
 
     let tb = tb::build(&common, &templates);
+*/
 /*
     let templates_path = "templates/**/*.sv.j2";
     let mut tera_dir = Tera::new(templates_path).unwrap();

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::collections::HashMap;
-use log::{debug, info};
+use log::{trace, debug, info};
 use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclarationAnsi, AnsiPortDeclaration, PortDirection};
 
 use crate::uvm::th::{DUT, Port, PortProperties, PortDirection as PortDir};
@@ -13,7 +13,7 @@ pub fn parse_dut(path: &String) -> DUT {
     let (syntax_tree, _def) = parse_sv(&path, &defines, &includes, false, false).expect("failed to parse DUT file");
 
     let dut = get_dut(&syntax_tree).expect("DUT not found in file");
-    debug!("dut parsed:\n{:#?}", dut);
+    trace!("dut parsed:\n{:#?}", dut);
     dut
 }
 
@@ -22,6 +22,7 @@ fn get_dut(syntax_tree: &SyntaxTree) -> Option<DUT> {
         match n {
             RefNode::ModuleDeclarationAnsi(x) => {
                 let name = get_dut_name(syntax_tree, x);
+                debug!("found module {}", name);
                 let ports = get_ports(syntax_tree, x);
 
                 return Some(DUT { name, ports });

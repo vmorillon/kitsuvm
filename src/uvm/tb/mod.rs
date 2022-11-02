@@ -1,6 +1,6 @@
 use log::{debug, info};
 
-use crate::config::{common, template};
+use crate::config::{project::Project, template};
 
 #[derive(Debug)]
 pub struct EnvConfig {
@@ -14,7 +14,7 @@ pub struct Env {
     config: EnvConfig,
 }
 
-pub fn build(common: &common::Common, templates: &Vec<template::Template>) -> Env {
+pub fn build(project: &Project, templates: &Vec<template::Template>) -> Env {
     info!("generating env");
 
     let mut agents = Vec::new();

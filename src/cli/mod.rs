@@ -4,11 +4,11 @@ use clap::Parser;
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     /// Relative path to common config file
-    #[arg(short, long, default_value = "./common.toml" )]
-    pub common: String,
-    /// Relative path to pinlist file
-    #[arg(short, long, default_value = "./pinlist.toml" )]
-    pub pinlist: String,
+    #[arg(short, long, default_value = "./project.toml" )]
+    pub project: String,
+    /// Relative path to instances file
+    #[arg(short, long, default_value = "./instances.toml" )]
+    pub instances: String,
 
     /// Relative path to template files
     #[arg(required = true)]
