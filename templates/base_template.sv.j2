@@ -1,16 +1,19 @@
-`ifndef {% filter upper %}{{ class.name }}{% endfilter %}_GUARD
-`define {% filter upper %}{{ class.name }}{% endfilter %}_GUARD
+{%- block class_vars -%}
+{%- set class_type = "TODO_type_TODO" %}
+{%- set class_name = "TODO_name_TODO" %}
+{%- endblock class_vars -%}
 
-{% block header -%}
-{%- if header -%}
+`ifndef {% filter upper %}{{ class_name }}{% endfilter %}_GUARD
+`define {% filter upper %}{{ class_name }}{% endfilter %}_GUARD
+
+{%- block header %}
+{%- if header %}
 {%- include "header.sv.j2" -%}
-{%- endif -%}
+{%- endif %}
 {%- endblock header %}
 
-{% block class_def -%}
-{%- endblock class_def %}
+{% block class_def %}{% endblock class_def %}
 
-{% block post_class_def -%}
-{%- endblock post_class_def %}
+{% block post_class_def %}{% endblock post_class_def %}
 
-`endif // {% filter upper %}{{ class.name }}{% endfilter %}_GUARD
+`endif // {% filter upper %}{{ class_name }}{% endfilter %}_GUARD

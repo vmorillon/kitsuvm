@@ -7,7 +7,7 @@ pub struct Project {
     pub generate_file_header: bool,
     #[serde(default = "default_top_default_sequence")]
     pub top_default_sequence: u32,
-    
+
     #[serde(default = "default_dut")]
     pub dut: DUT,
 }
@@ -15,6 +15,7 @@ pub struct Project {
 fn default_dut() -> DUT {
     DUT {
         path: default_path(),
+        name: None,
         clock: None,
         reset: None,
     }
@@ -31,6 +32,7 @@ fn default_top_default_sequence() -> u32 {
 pub struct DUT {
     #[serde(default = "default_path")]
     pub path: String,
+    pub name: Option<String>,
     pub clock: Option<String>,
     pub reset: Option<String>,
 }

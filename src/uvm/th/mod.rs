@@ -1,4 +1,5 @@
 use log::{debug, info, error};
+use serde::{Deserialize, Serialize};
 
 use std::collections::{HashMap, HashSet};
 
@@ -114,7 +115,7 @@ pub struct DUT {
     pub ports: HashMap<String, PortProperties>,
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Deserialize, Serialize, Clone, Default, Debug)]
 pub enum PortDirection {
     INPUT,
     OUTPUT,
@@ -134,13 +135,13 @@ impl Not for PortDirection {
     }
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Deserialize, Serialize, Clone, Default, Debug)]
 pub struct PortProperties {
     pub direction: PortDirection,
     pub dimensions: Vec<(u32,u32)>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Deserialize, Serialize, Default, Debug)]
 pub struct Port {
     pub name: String,
     pub properties: PortProperties,
@@ -153,7 +154,7 @@ use std::fmt;
 
 impl fmt::Display for ParsePortError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "invalid port description: <port_name> <dim0> <dim1>...")
+        write!(f, "invalid port description\nexpected: <port_name> <dim0> <dim1>...")
     }
 }
 

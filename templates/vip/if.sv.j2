@@ -1,0 +1,45 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "interface" %}
+{%- set class_name = vip.name ~ "_if" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  timeunit      1ns;
+  timeprecision 1ps;
+
+  import {{ vip.name }}_pkg::*;
+
+  {% if vip.clock -%}
+  wire {{ vip.clock }};
+  {%- endif %}
+  {% if vip.reset -%}
+  wire {{ vip.reset }};
+  {%- endif %}
+
+  // Ports
+  {%- for port in vip.ports %}
+  {% if port.properties.dimensions -%}
+    wire [{{ port.properties.dimensions[0][0] }}:{{ port.properties.dimensions[0][1] }}] {{ port.name }};
+  {%- else -%}
+  wire {{ port.name }};
+  {%- endif %}
+  {%- endfor %}
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  {% if vip.clock and vip.use_clock_block -%}
+  clocking cb_drv @(posedge {{ vip.clock }});
+    {%- for port in vip.ports %}
+    {{ port.properties.direction }} {{ port.name }};
+    {%- endfor %}
+  endclocking: cb_drv
+
+  clocking cb_mon @(posedge {{ vip.clock }});
+    {%- for port in vip.ports %}
+    input {{ port.name }};
+    {%- endfor %}
+  endclocking: cb_mon
+  {%- endif %}
+{%- endblock class_functions_signatures %}

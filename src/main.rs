@@ -5,13 +5,13 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::Parser;
-use log::{trace, debug, info};
+use log::{trace, debug, info, error};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 use toml;
 
 use kitsuvm_poc::cli;
-use kitsuvm_poc::config::{parse_config_files, check_instances_vip_compat, project::Project, pinlist, vip::{VIP, Item}, instance::{Instances, Instance, Mode}};
+use kitsuvm_poc::config::{parse_config_files, check_i_v_compat, check_i_v_d_compat, project::Project, pinlist, vip::{VIP, Item}, instance::{Instances, Instance, Mode}};
 use kitsuvm_poc::dut_parser;
 use kitsuvm_poc::uvm::{tb, th};
 /*
@@ -43,57 +43,72 @@ fn main() {
     let cli = cli::Args::parse();
     trace!("cli parsed:\n{:#?}", cli);
 
-    let (project, mut instances, templates) = parse_config_files(cli);
+    let (project, mut instances, vips) = parse_config_files(&cli);
     instances.estimate_ids();
-    check_instances_vip_compat(&instances, &templates);
+    check_i_v_compat(&instances, &vips);
 
-    let dut = dut_parser::parse_dut(&project.dut.path);
+    let dut = dut_parser::parse_dut(&project.dut);
+    check_i_v_d_compat(&instances, &vips, &dut);
 
-    /*
-    let project_str = "".to_string();
-    let cfg: Project = toml::from_str(&project_str).unwrap();
-    println!("{:#?}", cfg);
-    let project_str = toml::to_string(&cfg).unwrap();
-    println!("{}", project_str);
-    */
-    /*
-    let fifo_in_vip = VIP {
-        name: "fifo_in".to_string(),
-        ports: Vec::from(["aaa".to_string(), "bbb".to_string()]),
-        clock: Some("clk".to_string()),
-        reset: None,
-        use_clock_block: true,
-        item: Default::default(),
+    info!("loading tera templates from {}", cli.templates);
+    let mut tera_dir = match Tera::new(&cli.templates) {
+        Ok(t) => t,
+        Err(e) => {
+            error!("Parsing error(s): {}", e);
+            panic!();
+        }
     };
-    let fifo_in_vip_str = toml::to_string(&fifo_in_vip).unwrap();
-    println!("{}", fifo_in_vip_str);
-    let fifo_in_vip_str = std::fs::read_to_string("examples/fifo/fifo_in.toml").unwrap();
-    let fifo_in_vip: VIP = toml::from_str(&fifo_in_vip_str).unwrap();
-    println!("{:#?}", fifo_in_vip);
-    */
-    /*
-    let instance_in = Instance {
-        vip_name: "fifo_in".to_string(),
-        connected_to: Vec::from(["aaa".to_string(), "bbb".to_string()]),
-        id: None,
-        mode: Mode::Controller,
-    };
-    let instance_out = Instance {
-        vip_name: "fifo_out".to_string(),
-        connected_to: Vec::from(["aaa".to_string(), "bbb".to_string()]),
-        id: None,
-        mode: Mode::Responder,
-    };
-    let instances: Instances = vec![instance_in, instance_out].into();
-    let instances_str = toml::to_string(&instances).unwrap();
-    println!("{}", instances_str);
+    tera_dir.autoescape_on(vec![]);
 
-    let instances_str = std::fs::read_to_string("examples/fifo/instances.toml").unwrap();
-    let mut instances: Instances = toml::from_str(&instances_str).unwrap();
-    println!("{:#?}", instances);
-    instances.estimate_ids();
-    println!("{:#?}", instances);
-*/
+    let mut render_vips = Vec::new();
+    for v in &vips {
+        let vip = kitsuvm_poc::render::VIP::try_from(v).unwrap();
+        render_vips.push(vip);
+    }
+
+    let vip_components = vec![
+        "agent".to_string(),
+        "config".to_string(),
+        "coverage".to_string(),
+        "driver".to_string(),
+        "if".to_string(),
+        "monitor".to_string(),
+        "pkg".to_string(),
+        "seq_lib".to_string(),
+        "sequencer".to_string(),
+        "tx".to_string()
+    ];
+
+    for v in render_vips {
+        let output_directory_path = format!("{}/vip/{}", cli.output.clone(), v.name);
+        std::fs::create_dir_all(&output_directory_path).unwrap();
+
+        let mut context = tera::Context::new();
+        context.insert("vip", &v);
+
+        for c in &vip_components {
+            let template_path = format!("vip/{}.sv.j2", c);
+
+            match tera_dir.render(&template_path, &context) {
+                Ok(render) => {
+                    //println!("{}", render);
+
+                    let output_path = format!("{}/{}.sv", output_directory_path, c);
+                    let mut file = File::create(output_path).unwrap();
+                    file.write_all(render.as_bytes()).unwrap();
+                },
+                Err(e) => {
+                    println!("Error: {}", e);
+                    let mut cause = e.source();
+                    while let Some(e) = cause {
+                        println!("Reason: {}", e);
+                        cause = e.source();
+                    }
+                }
+            };
+        }
+    }
+
     /*
     let fifo_in_instances = instances.instances.iter().filter(|i| i.vip_name == "fifo_out").collect::<Vec<_>>();
     println!("{:#?}", fifo_in_instances);
@@ -108,80 +123,6 @@ fn main() {
     let templates_path = "templates/**/*.sv.j2";
     let mut tera_dir = Tera::new(templates_path).unwrap();
     tera_dir.autoescape_on(vec![]);
-*/
-/*
-    let cfg = common::Common {
-        dut_path: "fifo.sv".to_string(),
-        generate_file_header: false,
-        top_default_sequence: 10,
-    };
-    let common = toml::to_string(&cfg).unwrap();
-    println!("{}", common);
-
-    let common_file = std::fs::read_to_string("common.toml").unwrap();
-    let cfg: common::Common = toml::from_str(&common_file).unwrap();
-    println!("{:#?}", cfg);
-*/
-/*
-    let pl = PinList {
-        top_wire_dec: HashSet::from(["[31:0] random_top_signal".to_string()]),
-        top_param_dec: HashSet::from(["my_param 52".to_string()]),
-        global_map: HashMap::from([("clk".to_string(), "clock".to_string())]),
-        interface_map: HashMap::from([
-            ("agent_test_0".to_string(), HashMap::from([
-                ("data_rdy".to_string(),"data_rdy_0".to_string()),
-                ("data_vld".to_string(),"data_vld_0".to_string()),
-                ("data".to_string(),"data_0".to_string()),
-            ])),
-            ("agent_test_1".to_string(), HashMap::from([
-                ("data_rdy".to_string(),"data_rdy_1".to_string()),
-                ("data_vld".to_string(),"data_vld_1".to_string()),
-                ("data".to_string(),"data_1".to_string()),
-            ])),
-        ]),
-    };
-    let pinlist = toml::to_string(&pl).unwrap();
-    println!("{}", pinlist);
-    
-    let pinlist_file = std::fs::read_to_string("pinlist.toml").unwrap();
-    let pl: PinList = toml::from_str(&pinlist_file).unwrap();
-    println!("{:#?}", pl);
-*/
-/*
-    let tpl = template::Template {
-        agent: template::agent::Agent {
-            name: "agent_test".to_string(),
-            is_active: true,
-            number_of_instances: 2,
-        },
-        interface: template::interface::Interface {
-            ports: HashSet::from(["data_vld".to_string(), "data_rdy".to_string(), "data [31:0]".to_string()]),
-            clock: "clk".to_string(),
-            reset: "rst".to_string(),
-            use_clock_block: true,
-        },
-        item: template::item::Item {
-            name: "item_test".to_string(),
-            members: HashSet::from(["rand bit[31:0] data".to_string(), "rand int delay".to_string()]),
-            constraints: HashSet::from(["delay inside {[1:100]}".to_string()]),
-        },
-    };
-    let template = toml::to_string(&tpl).unwrap();
-    println!("{}", template);
-*/
-    //let tpl: template::Template = toml::from_str("").unwrap();
-    //println!("{:#?}", tpl);
-    //let yaml = serde_yaml::to_string(&cfg).unwrap();
-    //println!("{}", yaml);
-/*
-    let dut = dut_parser::parse_dut(cfg.dut_path);
-    //println!("{:#?}", dut);
-
-    let th = uvm::th::TestHarness {
-        interfaces: HashMap::new(),
-        dut,
-    };
-    println!("{:#?}", th);
 */
 
 /*
@@ -216,10 +157,6 @@ fn main() {
                 is_declared_internally:false},
         ]
     };
-*/
-/*
-    let yaml = serde_yaml::to_string(&class).unwrap();
-    println!("{}", yaml);
 */
 /*
     let mut context = tera::Context::new();

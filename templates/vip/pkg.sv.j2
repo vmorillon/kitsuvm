@@ -1,0 +1,21 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "package" %}
+{%- set class_name = vip.name ~ "_pkg" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  `include "uvm_macros.svh"
+
+  import uvm_pkg::*;
+
+  `include "{{ vip.name }}_tx.sv"
+  `include "{{ vip.name }}_config.sv"
+  `include "{{ vip.name }}_driver.sv"
+  `include "{{ vip.name }}_monitor.sv"
+  `include "{{ vip.name }}_sequencer.sv"
+  `include "{{ vip.name }}_coverage.sv"
+  `include "{{ vip.name }}_agent.sv"
+  `include "{{ vip.name }}_seq_lib.sv"
+{%- endblock class_members %}

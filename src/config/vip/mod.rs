@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct VIP {
-    pub name: String,
+    pub name: Option<String>,
     pub ports: Vec<String>,
     pub clock: Option<String>,
     pub reset: Option<String>,

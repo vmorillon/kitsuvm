@@ -1,0 +1,37 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = vip.name ~ "_default_seq" %}
+{%- set class_extends = "extends uvm_sequence #(" ~ vip.name ~ "_tx)" %}
+{%- set class_factory = class_name %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  {{ vip.name }}_config m_config;
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name = "");
+
+  extern task body();
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def -%}
+function {{ class_name }}::new(string name = "");
+  super.new(name);
+endfunction: new
+
+task {{ class_name }}::body();
+  `uvm_info(get_type_name(), "Default sequence starting", UVM_HIGH)
+
+  req = {{ vip.name }}_tx::type_id::create("req");
+  start_item(req);
+  if ( !req.randomize() )
+    `uvm_fatal(get_type_name(), "Failed to randomize transaction")
+  finish_item(req);
+
+  `uvm_info(get_type_name(), "Default sequence completed", UVM_HIGH)
+endtask: body
+{%- endblock post_class_def %}
+

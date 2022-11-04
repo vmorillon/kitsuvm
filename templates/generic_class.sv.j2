@@ -1,0 +1,20 @@
+{% extends "base_template.sv.j2" %}
+
+{% block class_def -%}
+{% if class_extends -%}
+{{ class_type }} {{ class_name }} {{ class_extends }};
+{%- else -%}
+{{ class_type }} {{ class_name }}{% if class_type == "interface" %}(){% endif %};
+{%- endif %}
+
+  {% if class_factory -%}
+  `uvm_component_utils({{ class_factory }})
+  {%- endif %}
+
+  {% block class_members -%}{%- endblock class_members %}
+
+  {% block class_functions_signatures -%}{%- endblock class_functions_signatures %}
+
+end{{ class_type }}: {{ class_name }}
+{%- endblock class_def %}
+

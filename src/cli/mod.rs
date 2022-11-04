@@ -9,8 +9,14 @@ pub struct Args {
     /// Relative path to instances file
     #[arg(short, long, default_value = "./instances.toml" )]
     pub instances: String,
+    /// Relative path to output directory
+    #[arg(short, long, default_value = "./out" )]
+    pub output: String,
+    /// Relative search path to tera template files
+    #[arg(short, long, default_value = "templates/**/*.sv.j2" )]
+    pub templates: String,
 
-    /// Relative path to template files
+    /// Relative path to vip files
     #[arg(required = true)]
-    pub templates: Vec<String>,
+    pub vips: Vec<String>,
 }

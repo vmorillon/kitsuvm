@@ -1,4 +1,3 @@
-name = "fifo_out"
 ports = [
   "data [31:0]",
   "data_vld",
@@ -9,9 +8,8 @@ clock = "clk"
 [item]
 members = [
   "rand bit[31:0] data",
-  "rand int delay"
+  "rand int rate"
 ]
 constraints = [
-  "delay inside {[1:100]}"
+  "rate inside {[1:100]}"
 ]
-

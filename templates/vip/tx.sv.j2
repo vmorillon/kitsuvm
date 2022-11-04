@@ -1,0 +1,108 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = vip.name ~ "_tx" %}
+{%- set class_extends = "extends uvm_sequence_item" %}
+{%- set class_factory = class_name %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  // Transaction variables
+  {%- for m in vip.item.members %}
+  {% if m.is_randomized -%}
+  rand {{ m.kind }} {{ m.name }};
+  {%- else -%}
+  {{ m.kind }} {{ m.name }};
+  {%- endif %}
+  {%- endfor %}
+
+  // Constraints
+  {%- for constraint in vip.item.constraints %}
+  constraint c{{ loop.index }} { {{ constraint }}; }
+  {%- endfor %}
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name = "");
+
+  extern function void do_copy(uvm_object rhs);
+  extern function bit  do_compare(uvm_object rhs, uvm_comparer comparer);
+  extern function void do_print(uvm_printer printer);
+  extern function void do_record(uvm_recorder recorder);
+  extern function void do_pack(uvm_packer packer);
+  extern function void do_unpack(uvm_packer packer);
+  extern function string convert2string();
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def -%}
+function {{ class_name }}::new(string name = "");
+  super.new(name);
+endfunction: new
+
+function void {{ class_name }}::do_copy(uvm_object rhs);
+  {{ class_name }} rhs_;
+  if (!$cast(rhs_, rhs))
+    `uvm_fatal(get_type_name(), "Cast of rhs object failed")
+  super.do_copy(rhs);
+  {%- for m in vip.item.members %}
+  {{ m.name }} = rhs_.{{ m.name }};
+  {%- endfor %}
+endfunction: do_copy
+
+function bit {{ class_name }}::do_compare(uvm_object rhs, uvm_comparer comparer);
+  bit result;
+  {{ class_name }} rhs_;
+  if (!$cast(rhs_, rhs))
+    `uvm_fatal(get_type_name(), "Cast of rhs object failed")
+  result = super.do_compare(rhs, comparer);
+  {%- for m in vip.item.members %}
+  result &= comparer.compare_field("{{ m.name }}", {{ m.name }}, rhs_.{{ m.name }}, $bits({{ m.name }}));
+  {%- endfor %}
+  return result;
+endfunction: do_compare
+
+
+function void {{ class_name }}::do_print(uvm_printer printer);
+  if (printer.knobs.sprint == 0)
+    `uvm_info(get_type_name(), convert2string(), UVM_MEDIUM)
+  else
+    printer.m_string = convert2string();
+endfunction: do_print
+
+function void {{ class_name }}::do_record(uvm_recorder recorder);
+  super.do_record(recorder);
+  {%- for m in vip.item.members %}
+  `uvm_record_field("{{ m.name }}", {{ m.name }})
+  {%- endfor %}
+endfunction: do_record
+
+function void {{ class_name }}::do_pack(uvm_packer packer);
+  super.do_pack(packer);
+  {%- for m in vip.item.members %}
+  `uvm_pack_int({{ m.name }})
+  {%- endfor %}
+endfunction: do_pack
+
+function void {{ class_name }}::do_unpack(uvm_packer packer);
+  super.do_unpack(packer);
+  {%- for m in vip.item.members %}
+  `uvm_unpack_int({{ m.name }})
+  {%- endfor %}
+endfunction: do_unpack
+
+function string {{ class_name }}::convert2string();
+  string s;
+  $sformat(s, "%s\n", super.convert2string());
+  $sformat(s, {"%s\n",
+    {%- for m in vip.item.members %}
+    "{{ m.name }} = 'h%0h  'd%0d\n"{% if not loop.last %},{% endif %}
+    {%- endfor -%}},
+    get_full_name(),
+    {%- for m in vip.item.members %}
+    {{ m.name }}, {{m.name}}{% if not loop.last %},{% endif %}
+    {%- endfor -%});
+  return s;
+endfunction: convert2string
+{%- endblock post_class_def %}
+

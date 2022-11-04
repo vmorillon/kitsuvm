@@ -1,4 +1,0 @@
-dut_path = 'fifo.sv'
-#generate_file_header = true
-top_default_sequence = 2
-#not_right = 58

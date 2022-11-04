@@ -1,5 +1,5 @@
 [[instances]]
-vip_name = "fifo_in"
+vip_name = "fifo_32"
 connected_to = [
   "data_in",
   "data_in_vld",
@@ -7,7 +7,7 @@ connected_to = [
 ]
 
 [[instances]]
-vip_name = "fifo_out"
+vip_name = "fifo_16"
 connected_to = [
   "data_out",
   "data_out_vld",

@@ -1,0 +1,9 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_name = vip.name ~ "_sequencer_t" %}
+{%- endblock class_vars %}
+
+{% block class_def -%}
+typedef uvm_sequencer #({{ vip.name }}_tx) {{ class_name }};
+{%- endblock class_def %}

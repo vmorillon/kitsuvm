@@ -3,29 +3,36 @@ use std::collections::HashMap;
 use log::{trace, debug, info};
 use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclarationAnsi, AnsiPortDeclaration, PortDirection};
 
+use crate::config::project::DUT as DUTcfg;
 use crate::uvm::th::{DUT, Port, PortProperties, PortDirection as PortDir};
 
-pub fn parse_dut(path: &String) -> DUT {
-    info!("parsing dut {}", path);
+pub fn parse_dut(cfg: &DUTcfg) -> DUT {
+    info!("parsing dut file {}", cfg.path);
     let defines = HashMap::new();
     let includes: Vec<PathBuf> = Vec::new();
 
-    let (syntax_tree, _def) = parse_sv(&path, &defines, &includes, false, false).expect("failed to parse DUT file");
+    let (syntax_tree, _def) = parse_sv(&cfg.path, &defines, &includes, false, false).expect("failed to parse DUT file");
 
-    let dut = get_dut(&syntax_tree).expect("DUT not found in file");
+    let dut_name = cfg.name.clone().unwrap();
+    let dut = get_dut(&syntax_tree, dut_name).expect("DUT not found in file");
     trace!("dut parsed:\n{:#?}", dut);
     dut
 }
 
-fn get_dut(syntax_tree: &SyntaxTree) -> Option<DUT> {
+fn get_dut(syntax_tree: &SyntaxTree, dut_name: String) -> Option<DUT> {
+    info!("looking for dut {}", dut_name);
     for n in syntax_tree {
         match n {
             RefNode::ModuleDeclarationAnsi(x) => {
                 let name = get_dut_name(syntax_tree, x);
-                debug!("found module {}", name);
-                let ports = get_ports(syntax_tree, x);
+                if name == dut_name {
+                    debug!("found matching module {}", name);
+                    let ports = get_ports(syntax_tree, x);
 
-                return Some(DUT { name, ports });
+                    return Some(DUT { name, ports });
+                } else {
+                    debug!("found module {}, passing", name);
+                }
             }
             _ => (),
         }

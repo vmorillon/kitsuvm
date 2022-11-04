@@ -1,0 +1,44 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = vip.name ~ "_monitor" %}
+{%- set class_extends = "extends uvm_monitor" %}
+{%- set class_factory = class_name %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  virtual {{ vip.name }}_if vif;
+
+  {{ vip.name }}_config m_config;
+
+  uvm_analysis_port #({{ vip.name }}_tx) analysis_port;
+
+  {{ vip.name }}_tx m_trans;
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name, uvm_component parent);
+
+  extern task run_phase(uvm_phase phase);
+  extern task do_mon();
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def -%}
+function {{ class_name }}::new(string name, uvm_component parent);
+  super.new(name, parent);
+  analysis_port = new("analysis_port", this);
+endfunction: new
+
+task {{ class_name }}::run_phase(uvm_phase phase);
+  `uvm_info(get_type_name(), "run_phase", UVM_HIGH)
+
+  m_trans = {{ vip.name }}_tx::type_id::create("m_trans");
+  do_mon();
+endtask: run_phase
+
+task {{ class_name }}::do_mon();
+  `uvm_fatal(get_type_name(), "TODO: fill do_mon()");
+endtask: do_mon
+{%- endblock post_class_def %}
+
