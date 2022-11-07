@@ -1,4 +1,5 @@
 {%- extends "generic_class.sv.j2" -%}
+{% import "vip/utils/port_direction.sv.j2" as port_dir %}
 
 {%- block class_vars %}
 {%- set class_type = "interface" %}
@@ -30,15 +31,21 @@
 
 {% block class_functions_signatures -%}
   {% if vip.clock and vip.use_clock_block -%}
-  clocking cb_drv @(posedge {{ vip.clock }});
+  clocking cb_cont_drv @(posedge {{ vip.clock }});
     {%- for port in vip.ports %}
-    {{ port.properties.direction }} {{ port.name }};
+    {{ port_dir::generate_port_direction_controller(port_dir = port.properties.direction) }} {{ port.name }};
     {%- endfor %}
-  endclocking: cb_drv
+  endclocking: cb_cont_drv
+
+  clocking cb_resp_drv @(posedge {{ vip.clock }});
+    {%- for port in vip.ports %}
+    {{ port_dir::generate_port_direction_responder(port_dir = port.properties.direction) }} {{ port.name }};
+    {%- endfor %}
+  endclocking: cb_resp_drv
 
   clocking cb_mon @(posedge {{ vip.clock }});
     {%- for port in vip.ports %}
-    input {{ port.name }};
+    {{ port_dir::generate_port_direction_monitor(port_dir = port.properties.direction) }} {{ port.name }};
     {%- endfor %}
   endclocking: cb_mon
   {%- endif %}

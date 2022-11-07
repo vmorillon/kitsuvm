@@ -1,0 +1,24 @@
+{% macro generate_port_direction_controller(port_dir) %}
+  {%- if port_dir == "INPUT" -%}
+  input
+  {%- elif port_dir == "OUTPUT" -%}
+  output
+  {%- else -%}
+  inout
+  {%- endif -%}
+{% endmacro generate_port_direction_controller %}
+
+{% macro generate_port_direction_responder(port_dir) %}
+  {%- if port_dir == "INPUT" -%}
+  output
+  {%- elif port_dir == "OUTPUT" -%}
+  input
+  {%- else -%}
+  inout
+  {%- endif -%}
+{% endmacro generate_port_direction_controller %}
+
+{% macro generate_port_direction_monitor(port_dir) -%}
+  input
+{%- endmacro generate_port_direction_controller %}
+

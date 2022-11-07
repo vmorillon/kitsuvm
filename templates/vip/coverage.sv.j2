@@ -16,7 +16,9 @@
     option.per_instance = 1;
     // You may insert additional coverpoints here ...
 
-    {coverpoints}
+    {%- for m in vip.item.members %}
+    cp_{{ m.name }}: coverpoint m_item.{{ m.name }};
+    {%- endfor %}
   endgroup
 {%- endblock class_members %}
 
