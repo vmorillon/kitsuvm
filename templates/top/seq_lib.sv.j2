@@ -1,0 +1,70 @@
+{%- extends "generic_class.sv.j2" -%}
+{% import "top/utils/instance.sv.j2" as inst %}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = top.name ~ "_default_seq" %}
+{%- set class_extends = "extends uvm_sequence #(uvm_sequence_item)" %}
+{%- set class_factory = class_name %}
+{%- set class_object_utils = true %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  {{ top.name }}_config m_config;
+
+  {% for i in instances %}
+  {{ i.vip_name }}_agent {{ inst::instance_name_k(instance = i, kind = "agent") }};
+  {%- endfor %}
+
+  int m_seq_count = {{ top.default_sequence_repeat }};
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name = "");
+  extern task body();
+  extern task pre_start();
+  extern task post_start();
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def -%}
+function {{ top.name }}_default_seq::new(string name = "");
+  super.new(name);
+endfunction: new
+
+task {{ top.name }}_default_seq::body();
+  `uvm_info(get_type_name(), "Default sequence starting", UVM_HIGH)
+
+  repeat (m_seq_count)
+  begin
+    fork
+      {% for i in instances %}
+      if ({{ inst::instance_name_k(instance = i, kind = "agent") }}.m_config.is_active == UVM_ACTIVE)
+      begin
+        {{ i.vip_name }}_default_seq seq;
+        seq = {{ i.vip_name }}_default_seq::type_id::create("seq");
+        seq.set_item_context(this, {{ inst::instance_name_k(instance = i, kind = "agent") }}.m_sequencer);
+        if ( !seq.randomize() )
+          `uvm_error(get_type_name(), "Failed to randomize sequence")
+        seq.m_config = {{ inst::instance_name_k(instance = i, kind = "agent") }}.m_config;
+        seq.set_starting_phase( get_starting_phase() );
+        seq.start({{ inst::instance_name_k(instance = i, kind = "agent") }}.m_sequencer, this);
+      end
+      {%- endfor %}
+    join
+  end
+
+  `uvm_info(get_type_name(), "Default sequence completed", UVM_HIGH)
+endtask: body
+
+task {{ top.name }}_default_seq::pre_start();
+  uvm_phase phase = get_starting_phase();
+  if (phase != null)
+    phase.raise_objection(this);
+endtask: pre_start
+
+task {{ top.name }}_default_seq::post_start();
+  uvm_phase phase = get_starting_phase();
+  if (phase != null)
+    phase.drop_objection(this);
+endtask: post_start
+{%- endblock post_class_def %}

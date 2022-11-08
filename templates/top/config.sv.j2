@@ -1,0 +1,32 @@
+{%- extends "generic_class.sv.j2" -%}
+{% import "top/utils/instance.sv.j2" as inst %}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = top.name ~ "_config" %}
+{%- set class_extends = "extends uvm_object" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  {% for i in instances %}
+  rand {{ i.vip_name }}_config {{ inst::instance_name_k(instance = i, kind = "config") }};
+  {%- endfor %}
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name = "", bit coverage_enable = 0);
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def -%}
+function {{ class_name }}::new(string name = "", bit coverage_enable = 0);
+  super.new(name);
+
+  {% for i in instances %}
+  {{ inst::instance_name_k(instance = i, kind = "config") }} = new("{{ inst::instance_name_k(instance = i, kind = "config") }}");
+  {{ inst::instance_name_k(instance = i, kind = "config") }}.checks_enable = 1;
+  {{ inst::instance_name_k(instance = i, kind = "config") }}.coverage_enable = coverage_enable;
+  {{ inst::instance_name_k(instance = i, kind = "config") }}.is_active = {{ inst::is_active(mode = i.mode) }};
+  {{ inst::instance_name_k(instance = i, kind = "config") }}.is_controller = {{ inst::is_controller(mode = i.mode) }};
+  {% endfor %}
+endfunction: new
+{%- endblock post_class_def %}

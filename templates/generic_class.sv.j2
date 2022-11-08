@@ -8,7 +8,13 @@
 {%- endif %}
 
   {% if class_factory -%}
+  {% if class_object_utils -%}
+  `uvm_object_utils({{ class_factory }})
+  {%- else -%}
   `uvm_component_utils({{ class_factory }})
+  {%- endif %}
+  {%- else -%}
+  // do not register {{ class_name }} with the factory
   {%- endif %}
 
   {% block class_members -%}{%- endblock class_members %}

@@ -1,0 +1,19 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "package" %}
+{%- set class_name = top.name ~ "_test_pkg" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  `include "uvm_macros.svh"
+
+  import uvm_pkg::*;
+
+  {% for v in vips %}
+  import {{ v.name }}_pkg::*;
+  {%- endfor %}
+  import {{ top.name }}_pkg::*;
+
+  `include "{{ top.name }}_test.sv"
+{%- endblock class_members %}

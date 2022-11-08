@@ -5,6 +5,7 @@
 {%- set class_name = vip.name ~ "_default_seq" %}
 {%- set class_extends = "extends uvm_sequence #(" ~ vip.name ~ "_tx)" %}
 {%- set class_factory = class_name %}
+{%- set class_object_utils = true %}
 {%- endblock class_vars %}
 
 {% block class_members -%}

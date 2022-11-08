@@ -62,7 +62,7 @@ fn main() {
 
     let mut render_vips = Vec::new();
     for v in &vips {
-        let vip = kitsuvm_poc::render::VIP::try_from(v).unwrap();
+        let vip = kitsuvm_poc::render::vip::VIP::try_from(v).unwrap();
         render_vips.push(vip);
     }
 
@@ -79,7 +79,7 @@ fn main() {
         "tx".to_string()
     ];
 
-    for v in render_vips {
+    for v in &render_vips {
         let output_directory_path = format!("{}/vip/{}", cli.output.clone(), v.name);
         std::fs::create_dir_all(&output_directory_path).unwrap();
 
@@ -93,21 +93,190 @@ fn main() {
                 Ok(render) => {
                     //println!("{}", render);
 
-                    let output_path = format!("{}/{}.sv", output_directory_path, c);
+                    let output_path = format!("{}/{}_{}.sv", output_directory_path, v.name, c);
                     let mut file = File::create(output_path).unwrap();
                     file.write_all(render.as_bytes()).unwrap();
                 },
                 Err(e) => {
-                    println!("Error: {}", e);
+                    error!("Error: {}", e);
                     let mut cause = e.source();
                     while let Some(e) = cause {
-                        println!("Reason: {}", e);
+                        error!("Reason: {}", e);
                         cause = e.source();
                     }
                 }
             };
         }
     }
+
+    let top_components = vec![
+        "config".to_string(),
+        "env".to_string(),
+        "pkg".to_string(),
+        "scoreboard".to_string(),
+        "seq_lib".to_string(),
+    ];
+
+    let output_directory_path = format!("{}/top", cli.output.clone());
+    std::fs::create_dir_all(&output_directory_path).unwrap();
+
+    let top = kitsuvm_poc::render::top::Top {
+        name: "top".to_string(),
+        default_sequence_repeat: project.top_default_sequence,
+        dut_name: project.dut.name.unwrap(),
+        dut_clk: project.dut.clock,
+        dut_rst: project.dut.reset,
+    };
+
+    let mut context = tera::Context::new();
+    context.insert("instances", &instances.instances);
+    context.insert("vips", &vips);
+    context.insert("top", &top);
+
+    for c in &top_components {
+        let template_path = format!("top/{}.sv.j2", c);
+
+        match tera_dir.render(&template_path, &context) {
+            Ok(render) => {
+                //println!("{}", render);
+
+                let output_path = format!("{}/{}_{}.sv", output_directory_path, top.name, c);
+                let mut file = File::create(output_path).unwrap();
+                file.write_all(render.as_bytes()).unwrap();
+            },
+            Err(e) => {
+                error!("Error: {}", e);
+                let mut cause = e.source();
+                while let Some(e) = cause {
+                    error!("Reason: {}", e);
+                    cause = e.source();
+                }
+            }
+        };
+    }
+
+    let top_test_components = vec![
+        "test".to_string(),
+        "test_pkg".to_string(),
+    ];
+
+    let output_directory_path = format!("{}/top/test", cli.output.clone());
+    std::fs::create_dir_all(&output_directory_path).unwrap();
+
+    for c in &top_test_components {
+        let template_path = format!("top/test/{}.sv.j2", c);
+
+        match tera_dir.render(&template_path, &context) {
+            Ok(render) => {
+                //println!("{}", render);
+
+                let output_path = format!("{}/{}_{}.sv", output_directory_path, top.name, c);
+                let mut file = File::create(output_path).unwrap();
+                file.write_all(render.as_bytes()).unwrap();
+            },
+            Err(e) => {
+                error!("Error: {}", e);
+                let mut cause = e.source();
+                while let Some(e) = cause {
+                    error!("Reason: {}", e);
+                    cause = e.source();
+                }
+            }
+        };
+    }
+
+    let top_tb_components = vec![
+        "tb".to_string(),
+        "th".to_string(),
+    ];
+
+    let mut vips_clk = HashMap::new();
+    for v in &render_vips {
+        if let Some(clk) = v.clock.clone() {
+            vips_clk.insert(v.name.clone(), clk);
+        }
+    }
+    context.insert("vips_clk", &vips_clk);
+
+    let mut vips_rst = HashMap::new();
+    for v in &render_vips {
+        if let Some(rst) = v.reset.clone() {
+            vips_rst.insert(v.name.clone(), rst);
+        }
+    }
+    context.insert("vips_rst", &vips_rst);
+
+    let mut vips_ports = HashMap::new();
+    for v in &render_vips {
+        let mut ports = Vec::new();
+        for p in &v.ports {
+            ports.push(p.name.clone());
+        }
+        vips_ports.insert(v.name.clone(), ports);
+    }
+    context.insert("vips_ports", &vips_ports);
+
+    let output_directory_path = format!("{}/top/tb", cli.output.clone());
+    std::fs::create_dir_all(&output_directory_path).unwrap();
+
+    for c in &top_tb_components {
+        let template_path = format!("top/tb/{}.sv.j2", c);
+
+        match tera_dir.render(&template_path, &context) {
+            Ok(render) => {
+                //println!("{}", render);
+
+                let output_path = format!("{}/{}_{}.sv", output_directory_path, top.name, c);
+                let mut file = File::create(output_path).unwrap();
+                file.write_all(render.as_bytes()).unwrap();
+            },
+            Err(e) => {
+                error!("Error: {}", e);
+                let mut cause = e.source();
+                while let Some(e) = cause {
+                    error!("Reason: {}", e);
+                    cause = e.source();
+                }
+            }
+        };
+    }
+
+    let bin_components = vec![
+        "run".to_string(),
+    ];
+
+    let output_directory_path = format!("{}/bin", cli.output.clone());
+    std::fs::create_dir_all(&output_directory_path).unwrap();
+
+    for c in &bin_components {
+        let template_path = format!("bin/{}.sh.j2", c);
+
+        match tera_dir.render(&template_path, &context) {
+            Ok(render) => {
+                //println!("{}", render);
+
+                let output_path = format!("{}/{}.sh", output_directory_path, c);
+                let mut file = File::create(output_path).unwrap();
+                file.write_all(render.as_bytes()).unwrap();
+            },
+            Err(e) => {
+                error!("{}", e);
+                let mut cause = e.source();
+                while let Some(e) = cause {
+                    error!("Reason: {}", e);
+                    cause = e.source();
+                }
+            }
+        };
+    }
+
+    let dut_files_str = format!("{}.sv", dut.name);
+    let output_path = format!("{}/{}.txt", output_directory_path, "dut_files");
+    let mut file = File::create(output_path).unwrap();
+    file.write_all(dut_files_str.as_bytes()).unwrap();
+
+    let output_path = format!("{}/{}.sv", output_directory_path, dut.name);
+    std::fs::copy(project.dut.path, output_path).unwrap();
 
     /*
     let fifo_in_instances = instances.instances.iter().filter(|i| i.vip_name == "fifo_out").collect::<Vec<_>>();

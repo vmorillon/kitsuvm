@@ -1,0 +1,49 @@
+{%- extends "generic_class.sv.j2" -%}
+{% import "top/utils/instance.sv.j2" as inst %}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = top.name ~ "_scoreboard" %}
+{%- set class_extends = "extends uvm_scoreboard" %}
+{%- set class_factory = class_name %}
+{%- endblock class_vars %}
+
+{% block pre_class_def -%}
+{% for i in instances %}
+`uvm_analysis_imp_decl(_from_{{ inst::instance_name(instance = i) }})
+{%- endfor %}
+{%- endblock pre_class_def %}
+
+{% block class_members -%}
+  {% for i in instances %}
+  uvm_analysis_imp_from_{{ inst::instance_name(instance = i) }} #( {{ i.vip_name }}_tx, {{ class_name }}) {{ inst::instance_name(instance = i) }}_export;
+  {%- endfor %}
+
+  {{ top.name }}_config m_config;
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name, uvm_component parent);
+
+  {% for i in instances %}
+  extern function void write_from_{{ inst::instance_name(instance = i) }}(input {{ i.vip_name }}_tx pkt);
+  {%- endfor %}
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def %}
+function {{ class_name }}::new(string name, uvm_component parent);
+  super.new(name, parent);
+  if (!uvm_config_db #({{ top.name }}_config)::get(this, "", "config", m_config))
+    `uvm_fatal(get_type_name(), "Unable to get {{ top.name }}_config")
+  {% for i in instances %}
+  {{ inst::instance_name_k(instance = i, kind = "export") }} = new("{{ inst::instance_name_k(instance = i, kind = "export") }}", this);
+  {%- endfor %}
+endfunction: new
+
+{% for i in instances %}
+function void {{ class_name }}::write_from_{{ inst::instance_name(instance = i) }}(input {{ i.vip_name }}_tx pkt);
+  `uvm_info(get_type_name(), $sformatf("Received tx from {{ inst::instance_name(instance = i) }}: %s",
+  pkt.sprint( uvm_default_line_printer )), UVM_HIGH)
+endfunction: write_from_{{ inst::instance_name(instance = i) }}
+{% endfor %}
+{% endblock post_class_def %}

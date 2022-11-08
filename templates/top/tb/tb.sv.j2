@@ -1,0 +1,45 @@
+{%- extends "generic_class.sv.j2" -%}
+{% import "top/utils/instance.sv.j2" as inst %}
+
+{%- block class_vars %}
+{%- set class_type = "module" %}
+{%- set class_name = top.name ~ "_tb" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  timeunit      1ns;
+  timeprecision 1ps;
+
+  `include "uvm_macros.svh"
+
+  import uvm_pkg::*;
+
+  import {{ top.name }}_test_pkg::*;
+  import {{ top.name }}_pkg::{{ top.name }}_config;
+
+  {{ top.name }}_config {{ top.name }}_env_config;
+
+  // test harness
+  {{ top.name }}_th th();
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  initial
+  begin
+    bit coverage_enable;
+    coverage_enable = $test$plusargs("coverage_enable") ? 1:0;
+
+    {{ top.name }}_env_config = new("{{ top.name }}_env_config", coverage_enable);
+    if ( !{{ top.name }}_env_config.randomize() )
+      `uvm_fatal("{{ top.name }}_tb", "Failed to randomize top-level configuration object" )
+
+    {% for i in instances %}
+    {{ top.name }}_env_config.{{ inst::instance_name_k(instance = i, kind = "config") }}.vif = th.{{ inst::instance_name_k(instance = i, kind = "if") }};
+    {% endfor %}
+
+    uvm_config_db #({{ top.name }}_config)::set(null, "uvm_test_top", "config", {{ top.name }}_env_config);
+    uvm_config_db #({{ top.name }}_config)::set(null, "uvm_test_top.m_env", "config", {{ top.name }}_env_config);
+
+    run_test();
+  end
+{%- endblock class_functions_signatures %}

@@ -1,0 +1,32 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "class" %}
+{%- set class_name = top.name ~ "_test" %}
+{%- set class_extends = "extends uvm_test" %}
+{%- set class_factory = class_name %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  {{ top.name }}_env m_env;
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  extern function new(string name, uvm_component parent);
+
+  extern function void build_phase(uvm_phase phase);
+{%- endblock class_functions_signatures %}
+
+{% block post_class_def -%}
+function {{ class_name }}::new(string name, uvm_component parent);
+  super.new(name, parent);
+endfunction: new
+
+function void {{ class_name }}::build_phase(uvm_phase phase);
+
+  // you can modify any test-specific configuration object variables here,
+  // or override the default sequence
+
+  m_env = {{ top.name }}_env::type_id::create("m_env", this);
+endfunction: build_phase
+{%- endblock post_class_def %}

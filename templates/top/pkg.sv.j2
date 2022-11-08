@@ -1,0 +1,21 @@
+{%- extends "generic_class.sv.j2" -%}
+
+{%- block class_vars %}
+{%- set class_type = "package" %}
+{%- set class_name = top.name ~ "_pkg" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  `include "uvm_macros.svh"
+
+  import uvm_pkg::*;
+
+  {% for v in vips %}
+  import {{ v.name }}_pkg::*;
+  {%- endfor %}
+
+  `include "{{ top.name }}_config.sv"
+  `include "{{ top.name }}_seq_lib.sv"
+  `include "{{ top.name }}_scoreboard.sv"
+  `include "{{ top.name }}_env.sv"
+{%- endblock class_members %}

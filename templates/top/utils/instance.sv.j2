@@ -1,0 +1,43 @@
+{% macro generate_mode(mode) -%}
+  {%- if mode == "Controller" -%}
+    cont
+  {%- elif mode == "Responder" -%}
+    resp
+  {%- else -%}
+    pass
+  {%- endif -%}
+{%- endmacro generate_instance_name %}
+
+{% macro instance_name(instance) -%}
+  {{ instance.vip_name }}_{{ inst::generate_mode(mode = instance.mode) }}_{{ instance.id }}
+{%- endmacro generate_instance_name %}
+
+{% macro instance_name_k(instance, kind) -%}
+  {%- if kind == "agent" -%}
+    m_{{ inst::instance_name(instance = instance) }}_agent
+  {%- elif kind == "config" -%}
+    m_{{ inst::instance_name(instance = instance) }}_config
+  {%- elif kind == "coverage" -%}
+    m_{{ inst::instance_name(instance = instance) }}_coverage
+  {%- elif kind == "export" -%}
+    {{ inst::instance_name(instance = instance) }}_export
+  {%- elif kind == "if" -%}
+    {{ inst::instance_name(instance = instance) }}_if
+  {%- endif -%}
+{%- endmacro generate_instance_name %}
+
+{% macro is_active(mode) -%}
+  {%- if mode == "Passive" -%}
+  UVM_PASSIVE
+  {%- else -%}
+  UVM_ACTIVE
+  {%- endif -%}
+{%- endmacro is_active %}
+
+{% macro is_controller(mode) -%}
+  {%- if mode == "Controller" -%}
+  1
+  {%- else -%}
+  0
+  {%- endif -%}
+{%- endmacro is_active %}

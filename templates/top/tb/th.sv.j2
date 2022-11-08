@@ -1,0 +1,51 @@
+{%- extends "generic_class.sv.j2" -%}
+{% import "top/utils/instance.sv.j2" as inst %}
+
+{%- block class_vars %}
+{%- set class_type = "module" %}
+{%- set class_name = top.name ~ "_th" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  timeunit      1ns;
+  timeprecision 1ps;
+
+  logic clk = 0;
+  logic rst;
+
+  always #10 clk = ~clk;
+
+  initial
+  begin
+    rst = 0;
+    #75 rst = 1;
+  end
+
+  {% for i in instances -%}
+  {{ i.vip_name }}_if {{ inst::instance_name_k(instance = i, kind = "if") }}();
+  {% endfor %}
+
+  {% for i in instances -%}
+  {% if vips_clk[i.vip_name] -%}
+  assign {{ inst::instance_name_k(instance = i, kind = "if") }}.{{ vips_clk[i.vip_name] }} = clk;
+  {%- endif %}
+  {% if vips_rst[i.vip_name] -%}
+  assign {{ inst::instance_name_k(instance = i, kind = "if") }}.{{ vips_rst[i.vip_name] }} = rst;
+  {%- endif %}
+  {% endfor %}
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  {{ top.dut_name }} {{ top.dut_name }}(
+    {% if top.dut_clk -%}.{{ top.dut_clk }} (clk),{%- endif %}
+    {% if top.dut_rst -%}.{{ top.dut_rst }} (rst),{%- endif %}
+
+    {% for i in instances -%}
+    {% for p in i.connected_to -%}
+    .{{ p }} ({{ inst::instance_name_k(instance = i, kind = "if") }}.{{ vips_ports[i.vip_name][loop.index0] }}){% if not loop.last %},{% endif %}
+    {% endfor %}
+    {%- if not loop.last -%},{%- endif %}
+    {%- endfor %}
+  );
+{%- endblock class_functions_signatures %}
+
