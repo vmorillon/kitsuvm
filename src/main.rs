@@ -47,12 +47,18 @@ fn main() {
     kitsuvm_poc::render::render_all(&tera_dir, &render_vips, &instances, &cli, &project);
 
     let dut_files_str = format!("{}.sv", dut.name);
-    let output_directory_path = format!("{}/bin", cli.output.clone());
+    let output_directory_path = format!("{}/dut", cli.output.clone());
+    info!("creating directory {}", output_directory_path);
+    std::fs::create_dir_all(&output_directory_path).unwrap();
+
     let output_path = format!("{}/{}.txt", output_directory_path, "dut_files");
+    debug!("writing {}", output_path);
+
     let mut file = File::create(output_path).unwrap();
     file.write_all(dut_files_str.as_bytes()).unwrap();
 
     let output_path = format!("{}/{}.sv", output_directory_path, dut.name);
+    debug!("copying {} to {}", project.dut.path, output_path);
     std::fs::copy(project.dut.path, output_path).unwrap();
 }
 

@@ -4,6 +4,7 @@ set -e
 
 OUTPUT_DIR="./output"
 BIN_DIR="$(realpath .)"
+DUT_DIR="$(realpath ../dut)"
 VIP_DIR="$(realpath ../vip)"
 TOP_DIR="$(realpath ../top)"
 
@@ -20,6 +21,7 @@ error() {
 #--------------------------------------------------------------
 # execution
 #--------------------------------------------------------------
+[ -d "$DUT_DIR" ] || error "$DUT_DIR does not exist"
 [ -d "$VIP_DIR" ] || error "$VIP_DIR does not exist"
 [ -d "$TOP_DIR" ] || error "$TOP_DIR does not exist"
 
@@ -34,7 +36,7 @@ xrun \
   {%- endfor %}
   +incdir+$TOP_DIR \
   +incdir+$TOP_DIR/test \
-  -F $BIN_DIR/dut_files.txt \
+  -F $DUT_DIR/dut_files.txt \
   {%- for v in vips %}
   $VIP_DIR/{{ v.name }}/{{ v.name }}_pkg.sv \
   $VIP_DIR/{{ v.name }}/{{ v.name }}_if.sv \

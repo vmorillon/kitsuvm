@@ -3,7 +3,8 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::dut::utils::Port;
+use crate::config::vip::VIP as VIPcfg;
+use crate::dut::utils::{ParsePortError, Port};
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct VIP {
@@ -19,16 +20,16 @@ pub struct VIP {
 #[derive(Debug, Error)]
 pub enum ParseVIPError {
     #[error("invalid port")]
-    PortError(#[from] crate::dut::utils::ParsePortError),
+    PortError(#[from] ParsePortError),
 
     #[error("invalid member")]
     MemberError(#[from] ParseMemberError),
 }
 
-impl TryFrom<&crate::config::vip::VIP> for VIP {
+impl TryFrom<&VIPcfg> for VIP {
     type Error = ParseVIPError;
 
-    fn try_from(vip: &crate::config::vip::VIP) -> Result<Self, Self::Error> {
+    fn try_from(vip: &VIPcfg) -> Result<Self, Self::Error> {
         let mut ports = Vec::new();
         for p in &vip.ports {
             let port: Port = match p.parse() {
@@ -149,6 +150,8 @@ mod tests {
     #[test]
     fn failed_members_parsing() {
         let descriptions = vec![
+            "",
+            "    ",
             "__not_rand__ __type__ __name__",
             "__name__",
             "a b c d",
