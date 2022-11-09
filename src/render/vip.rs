@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use crate::uvm::th::Port;
+use crate::dut::utils::Port;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct VIP {

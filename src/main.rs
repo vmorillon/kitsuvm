@@ -7,7 +7,7 @@ use tera::Tera;
 
 use kitsuvm_poc::cli;
 use kitsuvm_poc::config::{parse_config_files, check_i_v_compat, check_i_v_d_compat};
-use kitsuvm_poc::dut_parser;
+use kitsuvm_poc::dut::parser::parse_dut;
 
 fn main() {
     env_logger::init();
@@ -21,7 +21,7 @@ fn main() {
     instances.estimate_ids();
     check_i_v_compat(&instances, &vips);
 
-    let dut = dut_parser::parse_dut(&project.dut);
+    let dut = parse_dut(&project.dut);
     check_i_v_d_compat(&instances, &vips, &dut);
 
     let templates_realpath = std::fs::canonicalize(&cli.templates).unwrap();

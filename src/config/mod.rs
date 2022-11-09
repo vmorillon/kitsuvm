@@ -12,7 +12,7 @@ use vip::VIP;
 use instance::Instances;
 
 use crate::cli::Args;
-use crate::uvm::th::DUT;
+use crate::dut::utils::DUT;
 
 pub fn parse_config_files(cli: &Args) -> (Project, Instances, Vec<VIP>) {
     info!("reading project {}", cli.project);

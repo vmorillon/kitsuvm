@@ -4,7 +4,7 @@ use log::{trace, debug, info};
 use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclarationAnsi, AnsiPortDeclaration, PortDirection};
 
 use crate::config::project::DUT as DUTcfg;
-use crate::uvm::th::{DUT, Port, PortProperties, PortDirection as PortDir};
+use crate::dut::utils::{DUT, Port, PortProperties, PortDirection as PortDir};
 
 pub fn parse_dut(cfg: &DUTcfg) -> DUT {
     info!("parsing dut file {}", cfg.path);

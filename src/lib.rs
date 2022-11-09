@@ -1,5 +1,4 @@
 pub mod cli;
 pub mod config;
-pub mod dut_parser;
+pub mod dut;
 pub mod render;
-pub mod uvm;
