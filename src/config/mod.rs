@@ -1,6 +1,4 @@
 pub mod project;
-pub mod pinlist;
-pub mod template;
 pub mod vip;
 pub mod instance;
 

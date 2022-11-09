@@ -13,7 +13,7 @@ pub struct Args {
     #[arg(short, long, default_value = "./out" )]
     pub output: String,
     /// Relative search path to tera template files
-    #[arg(short, long, default_value = "templates/**/*.sv.j2" )]
+    #[arg(short, long, default_value = "./templates" )]
     pub templates: String,
 
     /// Relative path to vip files

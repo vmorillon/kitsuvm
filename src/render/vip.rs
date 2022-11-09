@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::uvm::th::Port;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct VIP {
     pub name: String,
     pub ports: Vec<Port>,
@@ -52,13 +52,13 @@ impl TryFrom<&crate::config::vip::VIP> for VIP {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Item {
     pub members: Vec<Member>,
     pub constraints: Vec<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Member {
     name: String,
     kind: String,

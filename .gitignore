@@ -6,3 +6,4 @@ Cargo.lock
 
 # Dummy output
 test_out.sv
+/examples/*/out

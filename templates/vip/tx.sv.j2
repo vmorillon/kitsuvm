@@ -95,14 +95,10 @@ endfunction: do_unpack
 function string {{ class_name }}::convert2string();
   string s;
   $sformat(s, "%s\n", super.convert2string());
-  $sformat(s, {"%s\n",
-    {%- for m in vip.item.members %}
-    "{{ m.name }} = 'h%0h  'd%0d\n"{% if not loop.last %},{% endif %}
-    {%- endfor -%}},
-    get_full_name(),
-    {%- for m in vip.item.members %}
-    {{ m.name }}, {{m.name}}{% if not loop.last %},{% endif %}
-    {%- endfor -%});
+  $sformat(s, "%s\n", get_full_name());
+  {%- for m in vip.item.members %}
+  $sformat(s, "{{ m.name }} = 'h%0h  'd%0d\n", {{ m.name }}, {{m.name}});
+  {%- endfor %}
   return s;
 endfunction: convert2string
 {%- endblock post_class_def %}
