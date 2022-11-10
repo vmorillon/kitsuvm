@@ -1,0 +1,16 @@
+ports = [
+  "data [23:0]",
+  "data_vld",
+  "data_rdy"
+]
+clock = "clk"
+
+[item]
+members = [
+  "rand bit[23:0] data",
+  "rand int rate"
+]
+constraints = [
+  "rate inside {[1:100]}"
+]
+

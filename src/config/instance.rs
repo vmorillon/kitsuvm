@@ -3,7 +3,9 @@ use std::collections::{HashMap, HashSet};
 use log::{debug, info, error};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
+use crate::render::vip::VIP;
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Instances {
     pub instances: Vec<Instance>,
@@ -15,6 +17,26 @@ impl From<Vec<Instance>> for Instances {
             instances
         }
     }
+}
+
+pub fn get_self_test_instances(vip: &VIP) -> Instances {
+    let modes = vec![Mode::Controller, Mode::Passive, Mode::Responder];
+    let mut instances = Vec::new();
+    let mut connected_to = Vec::new();
+    for p in &vip.ports {
+        connected_to.push(p.name.clone());
+    }
+    for m in modes {
+        let instance = Instance {
+            vip_name: vip.name.clone(),
+            connected_to: connected_to.clone(),
+            id: Some(0),
+            mode: m,
+        };
+        instances.push(instance);
+    }
+
+    instances.into()
 }
 
 impl Instances {
@@ -81,7 +103,7 @@ impl Instances {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Instance {
     pub vip_name: String,

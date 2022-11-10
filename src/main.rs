@@ -5,18 +5,48 @@ use clap::Parser;
 use log::{trace, debug, info, error};
 use tera::Tera;
 
-use kitsuvm_poc::cli;
-use kitsuvm_poc::config::{parse_config_files, check_i_v_compat, check_i_v_d_compat};
+use kitsuvm_poc::cli::Args;
+use kitsuvm_poc::config::{parse_config_files, parse_vip_files, parse_project_file, check_i_v_compat, check_i_v_d_compat, instance::get_self_test_instances};
 use kitsuvm_poc::dut::parser::parse_dut;
+use kitsuvm_poc::render::{render_top, render_self_test, render_vips, get_tera_dir, vip::get_render_vips};
 
 fn main() {
     env_logger::init();
     debug!("starting up");
 
     debug!("parsing cli");
-    let cli = cli::Args::parse();
+    let cli = Args::parse();
     trace!("cli parsed:\n{:#?}", cli);
 
+    let tera_dir = get_tera_dir(&cli);
+
+    if !cli.no_self_test {
+        gen_self_test(&cli, &tera_dir);
+    }
+    if !cli.no_top {
+        gen_top(&cli, &tera_dir);
+    }
+    if !cli.no_vips {
+        gen_vips(&cli, &tera_dir);
+    }
+}
+
+fn gen_self_test(cli: &Args, tera_dir: &Tera) {
+    info!("generating self-test");
+    let vips = parse_vip_files(&cli.vips);
+    let project = parse_project_file(cli.project.clone());
+    let vips = get_render_vips(&vips);
+
+    for v in &vips {
+        let instances = get_self_test_instances(v);
+
+        debug!("rendering self-test {}", v.name);
+        render_self_test(&tera_dir, &v, &instances, cli, &project);
+    }
+}
+
+fn gen_top(cli: &Args, tera_dir: &Tera) {
+    info!("generating top");
     let (project, mut instances, vips) = parse_config_files(&cli);
     instances.estimate_ids();
     check_i_v_compat(&instances, &vips);
@@ -24,27 +54,10 @@ fn main() {
     let dut = parse_dut(&project.dut);
     check_i_v_d_compat(&instances, &vips, &dut);
 
-    let templates_realpath = std::fs::canonicalize(&cli.templates).unwrap();
-    let templates_query = format!("{}/**/*.j2", templates_realpath.to_str().unwrap());
-    info!("loading tera templates from {}", templates_query);
-    let mut tera_dir = match Tera::new(&templates_query) {
-        Ok(t) => t,
-        Err(e) => {
-            error!("Parsing error(s): {}", e);
-            panic!();
-        }
-    };
-    let names: Vec<_> = tera_dir.get_template_names().collect();
-    trace!("loaded templates:\n{:#?}", names);
-    tera_dir.autoescape_on(vec![]);
+    let vips = get_render_vips(&vips);
 
-    let mut render_vips = Vec::new();
-    for v in &vips {
-        let vip = kitsuvm_poc::render::vip::VIP::try_from(v).unwrap();
-        render_vips.push(vip);
-    }
-
-    kitsuvm_poc::render::render_all(&tera_dir, &render_vips, &instances, &cli, &project);
+    debug!("rendering top");
+    render_top(&tera_dir, &vips, &instances, &cli, &project);
 
     let dut_files_str = format!("{}.sv", dut.name);
     let output_directory_path = format!("{}/dut", cli.output.clone());
@@ -62,3 +75,12 @@ fn main() {
     std::fs::copy(project.dut.path, output_path).unwrap();
 }
 
+fn gen_vips(cli: &Args, tera_dir: &Tera) {
+    info!("generating vips");
+
+    let vips = parse_vip_files(&cli.vips);
+    let vips = get_render_vips(&vips);
+
+    debug!("rendering vips");
+    render_vips(&tera_dir, &vips, cli);
+}

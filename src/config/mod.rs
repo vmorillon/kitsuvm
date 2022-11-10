@@ -15,21 +15,17 @@ use crate::cli::Args;
 use crate::dut::utils::DUT;
 
 pub fn parse_config_files(cli: &Args) -> (Project, Instances, Vec<VIP>) {
-    info!("reading project {}", cli.project);
     let project = parse_project_file(cli.project.clone());
-    trace!("project parsed:\n{:#?}", project);
 
-    info!("reading instances {}", cli.instances);
     let instances = parse_instances_file(cli.instances.clone());
-    trace!("instances parsed:\n{:#?}", instances);
 
-    info!("reading vip templates");
     let vips = parse_vip_files(&cli.vips);
 
     (project, instances, vips)
 }
 
-fn parse_project_file(path: String) -> Project {
+pub fn parse_project_file(path: String) -> Project {
+    info!("reading project {}", path);
     let project_str = std::fs::read_to_string(path).unwrap();
     let mut project: Project = toml::from_str(&project_str).unwrap();
     if project.dut.name == None {
@@ -38,17 +34,21 @@ fn parse_project_file(path: String) -> Project {
         project.dut.name = Some(name);
     }
 
+    trace!("project parsed:\n{:#?}", project);
     project
 }
 
 fn parse_instances_file(path: String) -> Instances {
+    info!("reading instances {}", path);
     let instances_str = std::fs::read_to_string(path).unwrap();
     let instances: Instances = toml::from_str(&instances_str).unwrap();
 
+    trace!("instances parsed:\n{:#?}", instances);
     instances
 }
 
-fn parse_vip_files(paths: &Vec<String>) -> Vec<VIP> {
+pub fn parse_vip_files(paths: &Vec<String>) -> Vec<VIP> {
+    info!("reading vip templates");
     let mut vips = Vec::new();
     for path in paths {
         info!("reading vip template {}", path);

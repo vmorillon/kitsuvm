@@ -3,6 +3,16 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
+    /// Disable top generator
+    #[arg(long, default_value = "false" )]
+    pub no_top: bool,
+    /// Disable vips generator
+    #[arg(long, default_value = "false" )]
+    pub no_vips: bool,
+    /// Disable self-test generator
+    #[arg(long, default_value = "false" )]
+    pub no_self_test: bool,
+
     /// Relative path to common config file
     #[arg(short, long, default_value = "./project.toml" )]
     pub project: String,

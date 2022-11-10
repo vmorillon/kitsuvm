@@ -65,6 +65,15 @@ impl TryFrom<&VIPcfg> for VIP {
     }
 }
 
+pub fn get_render_vips(vips: &Vec<VIPcfg>) -> Vec<VIP> {
+    let mut render_vips = Vec::new();
+    for v in vips {
+        let vip = VIP::try_from(v).unwrap();
+        render_vips.push(vip);
+    }
+    render_vips
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Item {
     pub members: Vec<Member>,
