@@ -20,7 +20,9 @@ enum Mode {
     Top(Top, Vec<VIP>, Instances),
     TopTest(Top, Vec<VIP>, Instances),
     TopTb(Top, Vec<VIP>, Instances),
+    STTopTb(Top, Vec<VIP>, Instances),
     Bin(Top, Vec<VIP>),
+    STBin(Top, Vec<VIP>),
 }
 
 impl Mode {
@@ -61,9 +63,20 @@ impl Mode {
                     "th".to_string(),
                 ]
             }
+            Mode::STTopTb(_, _, _) => {
+                vec![
+                    "tb".to_string(),
+                    "th".to_string(),
+                ]
+            }
             Mode::Bin(_, _) => {
                 vec![
                     "run".to_string(),
+                ]
+            }
+            Mode::STBin(_, _) => {
+                vec![
+                    "self_test".to_string(),
                 ]
             }
         }
@@ -72,10 +85,10 @@ impl Mode {
     fn get_output_directory_path(&self, cli: &Args) -> String {
         match self {
             Mode::VIP(vip) => format!("{}/vip/{}", cli.output.clone(), vip.name),
-            Mode::Top(_, _, _) => format!("{}/top", cli.output.clone()),
-            Mode::TopTest(_, _, _) => format!("{}/top/test", cli.output.clone()),
-            Mode::TopTb(_, _, _) => format!("{}/top/tb", cli.output.clone()),
-            Mode::Bin(_, _) => format!("{}/bin", cli.output.clone()),
+            Mode::Top(top, _, _) => format!("{}/{}", cli.output.clone(), top.name),
+            Mode::TopTest(top, _, _) => format!("{}/{}/test", cli.output.clone(), top.name),
+            Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => format!("{}/{}/tb", cli.output.clone(), top.name),
+            Mode::Bin(_, _) | Mode::STBin(_, _) => format!("{}/bin", cli.output.clone()),
         }
     }
 
@@ -84,8 +97,9 @@ impl Mode {
             Mode::VIP(vip) => format!("{}_{}.sv", vip.name, component),
             Mode::Top(top, _, _) => format!("{}_{}.sv", top.name, component),
             Mode::TopTest(top, _, _) => format!("{}_{}.sv", top.name, component),
-            Mode::TopTb(top, _, _) => format!("{}_{}.sv", top.name, component),
+            Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => format!("{}_{}.sv", top.name, component),
             Mode::Bin(_, _) => format!("{}.sh", component),
+            Mode::STBin(_, vips) => format!("{}_{}.sh", vips[0].name, component),
         }
     }
 
@@ -95,7 +109,15 @@ impl Mode {
             Mode::Top(_, _, _) => format!("top/{}.sv.j2", component),
             Mode::TopTest(_, _, _) => format!("top/test/{}.sv.j2", component),
             Mode::TopTb(_, _, _) => format!("top/tb/{}.sv.j2", component),
-            Mode::Bin(_, _) => format!("bin/{}.sh.j2", component),
+            Mode::STTopTb(_, _, _) => {
+                let name = if component == "th" {
+                    "self_test_th".to_string()
+                } else {
+                    component
+                };
+                format!("top/tb/{}.sv.j2", name)
+            }
+            Mode::Bin(_, _) | Mode::STBin(_, _) => format!("bin/{}.sh.j2", component),
         }
     }
 
@@ -124,7 +146,17 @@ impl Mode {
                 context.insert("vips_rst", &vips_rst);
                 context.insert("vips_ports", &vips_ports);
             }
-            Mode::Bin(top, vips) => {
+            Mode::STTopTb(top, vips, instances) => {
+                context.insert("instances", &instances.instances);
+                context.insert("vips", &vips);
+                context.insert("top", &top);
+
+                let (vips_clk, vips_rst, vips_ports) = get_vips_clk_rst_ports(vips);
+                context.insert("vips_clk", &vips_clk);
+                context.insert("vips_rst", &vips_rst);
+                context.insert("vips_ports", &vips_ports);
+            }
+            Mode::Bin(top, vips) | Mode::STBin(top, vips) => {
                 context.insert("vips", &vips);
                 context.insert("top", &top);
             }
@@ -201,8 +233,13 @@ pub fn render_self_test(tera_dir: &Tera, vip: &VIP, instances: &Instances, cli: 
         dut_clk: None,
         dut_rst: None,
     };
+    let vips = vec![vip.clone()];
 
     let mut modes = Vec::new();
+    modes.push(Mode::Top(top.clone(), vips.clone(), instances.clone()));
+    modes.push(Mode::TopTest(top.clone(), vips.clone(), instances.clone()));
+    modes.push(Mode::STTopTb(top.clone(), vips.clone(), instances.clone()));
+    modes.push(Mode::STBin(top.clone(), vips.clone()));
 
     for m in modes {
         render(m, tera_dir, cli);

@@ -1,0 +1,53 @@
+{%- extends "generic_class.sv.j2" -%}
+{% import "top/utils/instance.sv.j2" as inst %}
+
+{%- block class_vars %}
+{%- set class_type = "module" %}
+{%- set class_name = top.name ~ "_th" %}
+{%- endblock class_vars %}
+
+{% block class_members -%}
+  timeunit      1ns;
+  timeprecision 1ps;
+
+  logic clk = 0;
+  logic rst;
+
+  always #10 clk = ~clk;
+
+  initial
+  begin
+    rst = 0;
+    #75 rst = 1;
+  end
+
+  {% for i in instances -%}
+  {{ i.vip_name }}_if {{ inst::instance_name_k(instance = i, kind = "if") }}();
+  {% endfor %}
+
+  {% for i in instances -%}
+  {% if vips_clk[i.vip_name] -%}
+  assign {{ inst::instance_name_k(instance = i, kind = "if") }}.{{ vips_clk[i.vip_name] }} = clk;
+  {%- endif %}
+  {% if vips_rst[i.vip_name] -%}
+  assign {{ inst::instance_name_k(instance = i, kind = "if") }}.{{ vips_rst[i.vip_name] }} = rst;
+  {%- endif %}
+  {% endfor %}
+{%- endblock class_members %}
+
+{% block class_functions_signatures -%}
+  {% for p in vips[0].ports %}
+  {% if p.properties.dimensions -%}
+  wire [{{ p.properties.dimensions[0][0] }}:{{ p.properties.dimensions[0][1] }}] {{ p.name }};
+  {%- else -%}
+  wire {{ p.name }};
+  {%- endif %}
+  {% endfor %}
+
+  {% for i in instances -%}
+  {% for p in i.connected_to -%}
+  assign {{ inst::instance_name_k(instance = i, kind = "if") }}.{{ vips_ports[i.vip_name][loop.index0] }} = {{ p }};
+  {% endfor %}
+  {% endfor %}
+{%- endblock class_functions_signatures %}
+

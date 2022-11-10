@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 
 use clap::Parser;
-use log::{trace, debug, info, error};
+use log::{trace, debug, info};
 use tera::Tera;
 
 use kitsuvm_poc::cli::Args;
