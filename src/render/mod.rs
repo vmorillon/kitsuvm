@@ -18,6 +18,7 @@ use vip::VIP;
 enum Mode {
     VIP(VIP),
     Top(Top, Vec<VIP>, Instances),
+    STTop(Top, Vec<VIP>, Instances),
     TopTest(Top, Vec<VIP>, Instances),
     TopTb(Top, Vec<VIP>, Instances),
     STTopTb(Top, Vec<VIP>, Instances),
@@ -42,7 +43,7 @@ impl Mode {
                     "tx".to_string()
                 ]
             }
-            Mode::Top(_, _, _) => {
+            Mode::Top(_, _, _) | Mode::STTop(_, _, _) => {
                 vec![
                     "config".to_string(),
                     "env".to_string(),
@@ -85,7 +86,7 @@ impl Mode {
     fn get_output_directory_path(&self, cli: &Args) -> String {
         match self {
             Mode::VIP(vip) => format!("{}/vip/{}", cli.output.clone(), vip.name),
-            Mode::Top(top, _, _) => format!("{}/{}", cli.output.clone(), top.name),
+            Mode::Top(top, _, _) | Mode::STTop(top, _, _) => format!("{}/{}", cli.output.clone(), top.name),
             Mode::TopTest(top, _, _) => format!("{}/{}/test", cli.output.clone(), top.name),
             Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => format!("{}/{}/tb", cli.output.clone(), top.name),
             Mode::Bin(_, _) | Mode::STBin(_, _) => format!("{}/bin", cli.output.clone()),
@@ -95,7 +96,7 @@ impl Mode {
     fn get_output_filename(&self, component: String) -> String {
         match self {
             Mode::VIP(vip) => format!("{}_{}.sv", vip.name, component),
-            Mode::Top(top, _, _) => format!("{}_{}.sv", top.name, component),
+            Mode::Top(top, _, _) | Mode::STTop(top, _, _) => format!("{}_{}.sv", top.name, component),
             Mode::TopTest(top, _, _) => format!("{}_{}.sv", top.name, component),
             Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => format!("{}_{}.sv", top.name, component),
             Mode::Bin(_, _) => format!("{}.sh", component),
@@ -107,6 +108,14 @@ impl Mode {
         match self {
             Mode::VIP(_) => format!("vip/{}.sv.j2", component),
             Mode::Top(_, _, _) => format!("top/{}.sv.j2", component),
+            Mode::STTop(_, _, _) => {
+                let name = if component == "scoreboard" {
+                    "self_test_scoreboard".to_string()
+                } else {
+                    component
+                };
+                format!("top/{}.sv.j2", name)
+            }
             Mode::TopTest(_, _, _) => format!("top/test/{}.sv.j2", component),
             Mode::TopTb(_, _, _) => format!("top/tb/{}.sv.j2", component),
             Mode::STTopTb(_, _, _) => {
@@ -127,7 +136,7 @@ impl Mode {
             Mode::VIP(vip) => {
                 context.insert("vip", &vip);
             }
-            Mode::Top(top, vips, instances) => {
+            Mode::Top(top, vips, instances) | Mode::STTop(top, vips, instances) => {
                 context.insert("instances", &instances.instances);
                 context.insert("vips", &vips);
                 context.insert("top", &top);
@@ -225,7 +234,7 @@ fn render(mode: Mode, tera_dir: &Tera, cli: &Args) {
 }
 
 pub fn render_self_test(tera_dir: &Tera, vip: &VIP, instances: &Instances, cli: &Args, project: &Project) {
-    let name = format!("self_test_{}", vip.name);
+    let name = format!("{}_st", vip.name);
     let top = Top {
         name,
         default_sequence_repeat: project.top_default_sequence,
@@ -236,7 +245,7 @@ pub fn render_self_test(tera_dir: &Tera, vip: &VIP, instances: &Instances, cli: 
     let vips = vec![vip.clone()];
 
     let mut modes = Vec::new();
-    modes.push(Mode::Top(top.clone(), vips.clone(), instances.clone()));
+    modes.push(Mode::STTop(top.clone(), vips.clone(), instances.clone()));
     modes.push(Mode::TopTest(top.clone(), vips.clone(), instances.clone()));
     modes.push(Mode::STTopTb(top.clone(), vips.clone(), instances.clone()));
     modes.push(Mode::STBin(top.clone(), vips.clone()));

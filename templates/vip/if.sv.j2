@@ -22,7 +22,7 @@
   // Ports
   {%- for port in vip.ports %}
   {% if port.properties.dimensions -%}
-    wire [{{ port.properties.dimensions[0][0] }}:{{ port.properties.dimensions[0][1] }}] {{ port.name }};
+  wire [{{ port.properties.dimensions[0][0] }}:{{ port.properties.dimensions[0][1] }}] {{ port.name }};
   {%- else -%}
   wire {{ port.name }};
   {%- endif %}

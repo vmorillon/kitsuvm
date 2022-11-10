@@ -19,6 +19,10 @@
   uvm_analysis_imp_from_{{ inst::instance_name(instance = i) }} #({{ i.vip_name }}_tx, {{ class_name }}) {{ inst::instance_name(instance = i) }}_export;
   {%- endfor %}
 
+  {% for i in instances %}
+  {{ i.vip_name }}_tx from_{{ inst::instance_name(instance = i) }}[$];
+  {%- endfor %}
+
   {{ top.name }}_config m_config;
 {%- endblock class_members %}
 
@@ -28,6 +32,8 @@
   {% for i in instances %}
   extern function void write_from_{{ inst::instance_name(instance = i) }}(input {{ i.vip_name }}_tx pkt);
   {%- endfor %}
+
+  extern function void compare_queues();
 {%- endblock class_functions_signatures %}
 
 {% block post_class_def %}
@@ -42,8 +48,32 @@ endfunction: new
 
 {% for i in instances %}
 function void {{ class_name }}::write_from_{{ inst::instance_name(instance = i) }}(input {{ i.vip_name }}_tx pkt);
-  `uvm_info(get_type_name(), $sformatf("Received tx from {{ inst::instance_name(instance = i) }}: %s",
-  pkt.sprint( uvm_default_line_printer )), UVM_HIGH)
+  `uvm_info(get_type_name(), $sformatf("Received tx from {{ inst::instance_name(instance = i) }}: %s", pkt.sprint( uvm_default_line_printer )), UVM_HIGH)
+  from_{{ inst::instance_name(instance = i) }}.push_back(pkt);
+  compare_queues();
 endfunction: write_from_{{ inst::instance_name(instance = i) }}
 {% endfor %}
+
+function void {{ class_name }}::compare_queues();
+  if(
+    {%- for i in instances -%}
+    (from_{{ inst::instance_name(instance = i) }}.size()>0) {% if not loop.last %}&&{%endif%}
+    {%- endfor -%})
+  begin
+    {% for i in instances %}
+    {{ i.vip_name }}_tx {{ inst::instance_name(instance = i) }}_tx = from_{{ inst::instance_name(instance = i) }}.pop_front();
+    {%- endfor %}
+
+    {% for i in instances %}
+    {%- if not loop.last %}
+    {%- set next_index = loop.index0 + 1 %}
+    {%- set next_instance = instances[next_index] %}
+    if({{ inst::instance_name(instance = i) }}_tx.compare({{ inst::instance_name(instance = next_instance) }}_tx))
+      `uvm_info(get_type_name(), "{{ inst::instance_name(instance = i) }}_tx and {{ inst::instance_name(instance = next_instance) }}_tx matched", UVM_HIGH)
+    else
+      `uvm_error(get_type_name(), "{{ inst::instance_name(instance = i) }}_tx and {{ inst::instance_name(instance = next_instance) }}_tx mismatched")
+    {%- endif %}
+    {% endfor %}
+  end
+endfunction: compare_queues
 {% endblock post_class_def %}
