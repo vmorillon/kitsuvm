@@ -1,6 +1,6 @@
 # KitsUVM
 
-Random PoC trying to rebuild a better [easier\_uvm](https://www.doulos.com/knowhow/systemverilog/uvm/easier-uvm/).
+Random attempt trying to rebuild a better [easier\_uvm](https://www.doulos.com/knowhow/systemverilog/uvm/easier-uvm/).
 
 ## Features
 
