@@ -1,13 +1,13 @@
 ports = [
-  "data [23:0]",
-  "data_vld",
-  "data_rdy"
+  "addr [23:0]",
+  "is_alive",
+  "alive"
 ]
 clock = "clk"
 
 [item]
 members = [
-  "rand bit[23:0] data",
+  "rand bit[23:0] addr",
   "rand int rate"
 ]
 constraints = [
