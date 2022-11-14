@@ -18,8 +18,8 @@ Cargo is needed to build KitsUVM: [rust & cargo setup](https://www.rust-lang.org
 ### Examples
 
 Some basic examples are provided in:
-- [Fifo](examples/fifo/README.md) (top and self-test combined)
-- [HealthCheck](examples/healthcheck/README.md) (self-test only)
+- [Fifo](examples/fifo) (top and self-test combined)
+- [HealthCheck](examples/healthcheck) (self-test only)
 
 ### Code left to user to fill in
 
@@ -100,7 +100,7 @@ flowchart LR
     TemplateDir[[./templates/*.j2]]
   end
 
-  Tera -->|render| Project
+  Tera -->|renders| Project
   subgraph Project[UVM Project]
     direction LR
     binDir[bin]

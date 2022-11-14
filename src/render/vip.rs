@@ -1,10 +1,13 @@
+use std::collections::HashMap;
+use std::iter::zip;
 use std::str::FromStr;
 
+use log::{debug, warn, error};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::config::vip::VIP as VIPcfg;
-use crate::dut::utils::{ParsePortError, Port};
+use crate::config::{vip::VIP as VIPcfg, instance::{Instance, Instances, Mode::{Controller, Passive}}};
+use crate::dut::utils::{ParsePortError, Port, PortDirection, DUT};
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct VIP {
@@ -72,6 +75,54 @@ pub fn get_render_vips(vips: &Vec<VIPcfg>) -> Vec<VIP> {
         render_vips.push(vip);
     }
     render_vips
+}
+
+pub fn set_vips_port_dir(vips: &mut Vec<VIP>, instances: &Instances, dut: &DUT) {
+    for v in vips {
+        let instances: Vec<Instance> = instances.instances.clone()
+            .into_iter()
+            .filter(|instance| instance.vip_name == v.name)
+            .filter(|instance| instance.mode != Passive)
+            .collect();
+
+        let mut directions = HashMap::<String, PortDirection>::new();
+
+        for i in instances {
+            let zip_ports = zip(v.ports.clone(), i.connected_to);
+
+            for (vp, dp) in zip_ports {
+                if let Some(dir) = directions.get(&vp.name) {
+                    let expected_dir = if i.mode == Controller {
+                        !dir.clone()
+                    } else {
+                        dir.clone()
+                    };
+                    let port_dir = dut.ports.get(&dp).unwrap().direction.clone();
+
+                    if expected_dir != port_dir {
+                        error!("port_dir not matching");
+                    }
+                } else {
+                    let port_dir = dut.ports.get(&dp).unwrap().direction.clone();
+                    let dir = if i.mode == Controller {
+                        !port_dir
+                    } else {
+                        port_dir
+                    };
+                    directions.insert(vp.name, dir);
+                }
+            }
+        }
+
+        for p in &mut v.ports {
+            if let Some(dir) = directions.get(&p.name) {
+                debug!("port {} direction set to {:#?}", p.name, dir);
+                p.properties.direction = dir.clone();
+            } else {
+                warn!("port {} direction not set", p.name);
+            }
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

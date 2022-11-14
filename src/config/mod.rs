@@ -38,7 +38,7 @@ pub fn parse_project_file(path: String) -> Project {
     project
 }
 
-fn parse_instances_file(path: String) -> Instances {
+pub fn parse_instances_file(path: String) -> Instances {
     info!("reading instances {}", path);
     let instances_str = std::fs::read_to_string(path).unwrap();
     let instances: Instances = toml::from_str(&instances_str).unwrap();

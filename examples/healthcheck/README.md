@@ -4,7 +4,7 @@ Example of a single protocol self-test only environment.
 
 ## Protocol
 
-On clock rise, if `is\_alive` is true and `addr` matches the responder internal address, then the responder sets `alive` to true
+On clock rise, if `is_alive` is true and `addr` matches the responder internal address, then the responder sets `alive` to true
 
 When idling:
 - `addr` is set to `X`

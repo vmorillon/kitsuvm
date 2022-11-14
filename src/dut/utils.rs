@@ -11,7 +11,7 @@ pub struct DUT {
     pub ports: HashMap<String, PortProperties>,
 }
 
-#[derive(Deserialize, Serialize, Clone, Default, Debug)]
+#[derive(Deserialize, Serialize, Clone, Default, Debug, PartialEq)]
 pub enum PortDirection {
     INPUT,
     OUTPUT,

@@ -8,7 +8,7 @@ use tera::Tera;
 use kitsuvm_poc::cli::Args;
 use kitsuvm_poc::config::{parse_config_files, parse_vip_files, parse_project_file, check_i_v_compat, check_i_v_d_compat, instance::get_self_test_instances};
 use kitsuvm_poc::dut::parser::parse_dut;
-use kitsuvm_poc::render::{render_top, render_self_test, render_vips, get_tera_dir, vip::get_render_vips};
+use kitsuvm_poc::render::{render_top, render_self_test, render_vips, get_tera_dir, vip::{get_render_vips, set_vips_port_dir}};
 
 fn main() {
     env_logger::init();
@@ -78,8 +78,21 @@ fn gen_top(cli: &Args, tera_dir: &Tera) {
 fn gen_vips(cli: &Args, tera_dir: &Tera) {
     info!("generating vips");
 
-    let vips = parse_vip_files(&cli.vips);
-    let vips = get_render_vips(&vips);
+    let vips = if !cli.no_top {
+        info!("estimating ports directions");
+        let (project, instances, vips) = parse_config_files(&cli);
+        let dut = parse_dut(&project.dut);
+
+        let mut vips = get_render_vips(&vips);
+        set_vips_port_dir(&mut vips, &instances, &dut);
+
+        vips
+    } else {
+        debug!("no-top option enabled, cannot check ports directions");
+        let vips = parse_vip_files(&cli.vips);
+
+        get_render_vips(&vips)
+    };
 
     debug!("rendering vips");
     render_vips(&tera_dir, &vips, cli);
