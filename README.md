@@ -116,8 +116,7 @@ flowchart LR
 - further decrease release binary size? (currently around 40MB for release build)-> [min-sized-rust](https://github.com/johnthagen/min-sized-rust) and optional sv-parser dependency
 - performance enhancement -> async read/write for config files
 - handle multiple files DUT
-- clean/backup already existing output directory
-- `convert2string()` string and special types handling (by default return all values as int representation)
+- `convert2string()` string and special types handling (by default returns all values as int representation)
 - handle generic parameters for DUT and VIP
 
 ## Credits

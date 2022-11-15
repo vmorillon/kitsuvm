@@ -1,9 +1,8 @@
 # Generated files
 /target
-/out
 Cargo.lock
 !Cargo.toml
 
-# Dummy output
-test_out.sv
+# Examples output
 /examples/*/out
+/examples/*/out.bck
