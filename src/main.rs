@@ -3,13 +3,19 @@ use std::io::Write;
 use std::path::Path;
 
 use clap::Parser;
-use log::{trace, debug, info};
+use log::{debug, info, trace};
 use tera::Tera;
 
 use kitsuvm::cli::Args;
-use kitsuvm::config::{parse_config_files, parse_vip_files, parse_project_file, check_i_v_compat, check_i_v_d_compat, instance::get_self_test_instances};
+use kitsuvm::config::{
+    check_i_v_compat, check_i_v_d_compat, instance::get_self_test_instances, parse_config_files,
+    parse_project_file, parse_vip_files,
+};
 use kitsuvm::dut::parser::parse_dut;
-use kitsuvm::render::{render_top, render_self_test, render_vips, get_tera_dir, vip::{get_render_vips, set_vips_port_dir}};
+use kitsuvm::render::{
+    get_tera_dir, render_self_test, render_top, render_vips,
+    vip::{get_render_vips, set_vips_port_dir},
+};
 
 fn main() {
     env_logger::init();
@@ -35,7 +41,10 @@ fn backup_output_directory(cli: &Args) {
 
     if output_dir_path.is_dir() {
         let backup_path = format!("{}.bck", cli.output);
-        info!("{} already existing, creating backup at {}", cli.output, backup_path);
+        info!(
+            "{} already existing, creating backup at {}",
+            cli.output, backup_path
+        );
 
         let backup_dir_path = Path::new(&backup_path);
         if backup_dir_path.is_dir() {

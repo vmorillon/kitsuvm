@@ -2,11 +2,17 @@ use std::collections::HashMap;
 use std::iter::zip;
 use std::str::FromStr;
 
-use log::{debug, warn, error};
+use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::config::{vip::VIP as VIPcfg, instance::{Instance, Instances, Mode::{Controller, Passive}}};
+use crate::config::{
+    instance::{
+        Instance, Instances,
+        Mode::{Controller, Passive},
+    },
+    vip::VIP as VIPcfg,
+};
 use crate::dut::utils::{ParsePortError, Port, PortDirection, DUT};
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -79,7 +85,9 @@ pub fn get_render_vips(vips: &Vec<VIPcfg>) -> Vec<VIP> {
 
 pub fn set_vips_port_dir(vips: &mut Vec<VIP>, instances: &Instances, dut: &DUT) {
     for v in vips {
-        let instances: Vec<Instance> = instances.instances.clone()
+        let instances: Vec<Instance> = instances
+            .instances
+            .clone()
             .into_iter()
             .filter(|instance| instance.vip_name == v.name)
             .filter(|instance| instance.mode != Passive)
@@ -167,7 +175,7 @@ impl FromStr for Member {
                         is_randomized: false,
                     })
                 }
-            },
+            }
             3 => {
                 if split[0] == "rand" {
                     Ok(Member {
@@ -178,10 +186,8 @@ impl FromStr for Member {
                 } else {
                     Err(Self::Err::RandNotFound(s.to_string()))
                 }
-            },
-            _ => {
-                Err(Self::Err::InvalidMemberDescription(s.to_string()))
             }
+            _ => Err(Self::Err::InvalidMemberDescription(s.to_string())),
         }
     }
 }

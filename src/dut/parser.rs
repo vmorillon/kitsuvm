@@ -1,17 +1,21 @@
-use std::path::PathBuf;
+use log::{debug, info, trace};
 use std::collections::HashMap;
-use log::{trace, debug, info};
-use sv_parser::{parse_sv, unwrap_node, SyntaxTree, Locate, RefNode, ModuleDeclarationAnsi, AnsiPortDeclaration, PortDirection};
+use std::path::PathBuf;
+use sv_parser::{
+    parse_sv, unwrap_node, AnsiPortDeclaration, Locate, ModuleDeclarationAnsi, PortDirection,
+    RefNode, SyntaxTree,
+};
 
 use crate::config::project::DUT as DUTcfg;
-use crate::dut::utils::{DUT, Port, PortProperties, PortDirection as PortDir};
+use crate::dut::utils::{Port, PortDirection as PortDir, PortProperties, DUT};
 
 pub fn parse_dut(cfg: &DUTcfg) -> DUT {
     info!("parsing dut file {}", cfg.path);
     let defines = HashMap::new();
     let includes: Vec<PathBuf> = Vec::new();
 
-    let (syntax_tree, _def) = parse_sv(&cfg.path, &defines, &includes, false, false).expect("failed to parse DUT file");
+    let (syntax_tree, _def) =
+        parse_sv(&cfg.path, &defines, &includes, false, false).expect("failed to parse DUT file");
 
     let dut_name = cfg.name.clone().unwrap();
     let dut = get_dut(&syntax_tree, dut_name).expect("DUT not found in file");
@@ -48,7 +52,10 @@ fn get_dut_name(syntax_tree: &SyntaxTree, module: &ModuleDeclarationAnsi) -> Str
     name
 }
 
-fn get_ports(syntax_tree: &SyntaxTree, module: &ModuleDeclarationAnsi) -> HashMap<String, PortProperties> {
+fn get_ports(
+    syntax_tree: &SyntaxTree,
+    module: &ModuleDeclarationAnsi,
+) -> HashMap<String, PortProperties> {
     let mut ports = HashMap::new();
     for n in module {
         match n {
@@ -56,7 +63,7 @@ fn get_ports(syntax_tree: &SyntaxTree, module: &ModuleDeclarationAnsi) -> HashMa
                 let port = get_port(syntax_tree, x);
                 ports.insert(port.name, port.properties);
             }
-            _ => ()
+            _ => (),
         }
     }
     ports
@@ -68,7 +75,10 @@ fn get_port(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Port {
     let dimensions = get_dimensions(syntax_tree, port);
     let direction = get_direction(port);
 
-    let properties = PortProperties { direction, dimensions };
+    let properties = PortProperties {
+        direction,
+        dimensions,
+    };
 
     let port = Port { name, properties };
     port
@@ -82,7 +92,7 @@ fn get_port_name(syntax_tree: &SyntaxTree, module: &AnsiPortDeclaration) -> Stri
     name
 }
 
-fn get_dimensions(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Vec<(u32,u32)> {
+fn get_dimensions(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Vec<(u32, u32)> {
     let mut dimensions = Vec::new();
     for n in port {
         match n {
@@ -91,9 +101,9 @@ fn get_dimensions(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Vec<(
                 let end = end.parse().unwrap();
                 let start = syntax_tree.get_str(&x.nodes.2.clone()).unwrap();
                 let start = start.parse().unwrap();
-                dimensions.push((end,start));
+                dimensions.push((end, start));
             }
-            _ => ()
+            _ => (),
         }
     }
     dimensions
@@ -102,21 +112,19 @@ fn get_dimensions(syntax_tree: &SyntaxTree, port: &AnsiPortDeclaration) -> Vec<(
 fn get_direction(port: &AnsiPortDeclaration) -> PortDir {
     for n in port {
         match n {
-            RefNode::PortDirection(x) => {
-                match x {
-                    PortDirection::Input(_) => {
-                        return PortDir::INPUT;
-                    }
-                    PortDirection::Output(_) => {
-                        return PortDir::OUTPUT;
-                    }
-                    PortDirection::Inout(_) => {
-                        return PortDir::INOUT;
-                    }
-                    _ => ()
+            RefNode::PortDirection(x) => match x {
+                PortDirection::Input(_) => {
+                    return PortDir::INPUT;
                 }
-            }
-            _ => ()
+                PortDirection::Output(_) => {
+                    return PortDir::OUTPUT;
+                }
+                PortDirection::Inout(_) => {
+                    return PortDir::INOUT;
+                }
+                _ => (),
+            },
+            _ => (),
         }
     }
     PortDir::INOUT

@@ -1,7 +1,5 @@
 # Generated files
 /target
-Cargo.lock
-!Cargo.toml
 
 # Examples output
 /examples/*/out

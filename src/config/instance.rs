@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use log::{debug, info, error};
+use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 
 use crate::render::vip::VIP;
@@ -13,9 +13,7 @@ pub struct Instances {
 
 impl From<Vec<Instance>> for Instances {
     fn from(instances: Vec<Instance>) -> Self {
-        Instances {
-            instances
-        }
+        Instances { instances }
     }
 }
 
@@ -46,35 +44,38 @@ impl Instances {
 
         for i in &self.instances {
             match i.id {
-                Some(id) => {
-                    match used.get_mut(&i.vip_name) {
-                        Some(used_per_mode) => {
-                            match used_per_mode.get_mut(&i.mode) {
-                                Some(used) => {
-                                    if used.insert(id) {
-                                        debug!("register ID {} for mode {:?} of vip {}", id, i.mode, i.vip_name);
-                                    } else {
-                                        error!("already registered ID {} for mode {:?} of vip {}, check your instances file", id, i.mode, i.vip_name);
-                                    }
-
-                                }
-                                None => {
-                                    let mut used = HashSet::new();
-                                    used.insert(id);
-                                    used_per_mode.insert(i.mode.clone(), used);
-                                    debug!("register ID {} for mode {:?} of vip {}", id, i.mode, i.vip_name);
-                                }
+                Some(id) => match used.get_mut(&i.vip_name) {
+                    Some(used_per_mode) => match used_per_mode.get_mut(&i.mode) {
+                        Some(used) => {
+                            if used.insert(id) {
+                                debug!(
+                                    "register ID {} for mode {:?} of vip {}",
+                                    id, i.mode, i.vip_name
+                                );
+                            } else {
+                                error!("already registered ID {} for mode {:?} of vip {}, check your instances file", id, i.mode, i.vip_name);
                             }
-
                         }
                         None => {
-                            let mut used_per_mode = HashMap::new();
-                            used_per_mode.insert(i.mode.clone(), HashSet::from([id]));
-                            used.insert(i.vip_name.clone(), used_per_mode);
-                            debug!("register ID {} for mode {:?} of vip {}", id, i.mode, i.vip_name);
+                            let mut used = HashSet::new();
+                            used.insert(id);
+                            used_per_mode.insert(i.mode.clone(), used);
+                            debug!(
+                                "register ID {} for mode {:?} of vip {}",
+                                id, i.mode, i.vip_name
+                            );
                         }
+                    },
+                    None => {
+                        let mut used_per_mode = HashMap::new();
+                        used_per_mode.insert(i.mode.clone(), HashSet::from([id]));
+                        used.insert(i.vip_name.clone(), used_per_mode);
+                        debug!(
+                            "register ID {} for mode {:?} of vip {}",
+                            id, i.mode, i.vip_name
+                        );
                     }
-                }
+                },
                 None => {
                     debug!("pass unset ID for mode {:?} of vip {}", i.mode, i.vip_name);
                 }
@@ -116,28 +117,36 @@ pub struct Instance {
 
 impl std::fmt::Display for Instance {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "ID {} mode {:?} vip {}", self.id.unwrap(), self.mode, self.vip_name)
+        write!(
+            f,
+            "ID {} mode {:?} vip {}",
+            self.id.unwrap(),
+            self.mode,
+            self.vip_name
+        )
     }
 }
 
 impl Instance {
-    fn set_next_available_id(&mut self, counts: &mut HashMap<String, HashMap<Mode, u32>>, used: &HashMap<String, HashMap<Mode, HashSet<u32>>>) {
+    fn set_next_available_id(
+        &mut self,
+        counts: &mut HashMap<String, HashMap<Mode, u32>>,
+        used: &HashMap<String, HashMap<Mode, HashSet<u32>>>,
+    ) {
         let available_id = match counts.get_mut(&self.vip_name) {
-            Some(count_per_mode) => {
-                match count_per_mode.get_mut(&self.mode) {
-                    Some(count) => {
-                        *count += 1;
-                        let next = self.get_next_available_id(*count, used);
-                        *count = next;
-                        next
-                    }
-                    None => {
-                        let next = self.get_next_available_id(0, used);
-                        count_per_mode.insert(self.mode.clone(), next);
-                        next
-                    }
+            Some(count_per_mode) => match count_per_mode.get_mut(&self.mode) {
+                Some(count) => {
+                    *count += 1;
+                    let next = self.get_next_available_id(*count, used);
+                    *count = next;
+                    next
                 }
-            }
+                None => {
+                    let next = self.get_next_available_id(0, used);
+                    count_per_mode.insert(self.mode.clone(), next);
+                    next
+                }
+            },
             None => {
                 let next = self.get_next_available_id(0, used);
 
@@ -151,25 +160,23 @@ impl Instance {
         self.id = Some(available_id);
     }
 
-    fn get_next_available_id(&self, start: u32, used: &HashMap<String, HashMap<Mode, HashSet<u32>>>) -> u32 {
+    fn get_next_available_id(
+        &self,
+        start: u32,
+        used: &HashMap<String, HashMap<Mode, HashSet<u32>>>,
+    ) -> u32 {
         match used.get(&self.vip_name) {
-            Some(used_per_mode) => {
-                match used_per_mode.get(&self.mode) {
-                    Some(used) => {
-                        let mut count = start;
-                        while used.contains(&count) {
-                            count += 1;
-                        }
-                        count
+            Some(used_per_mode) => match used_per_mode.get(&self.mode) {
+                Some(used) => {
+                    let mut count = start;
+                    while used.contains(&count) {
+                        count += 1;
                     }
-                    None => {
-                        start
-                    }
+                    count
                 }
-            }
-            None => {
-                start
-            }
+                None => start,
+            },
+            None => start,
         }
     }
 }

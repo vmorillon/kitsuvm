@@ -15,7 +15,8 @@ pub struct DUT {
 pub enum PortDirection {
     INPUT,
     OUTPUT,
-    #[default] INOUT,
+    #[default]
+    INOUT,
 }
 
 impl Not for PortDirection {
@@ -33,7 +34,7 @@ impl Not for PortDirection {
 #[derive(Deserialize, Serialize, Clone, Default, Debug)]
 pub struct PortProperties {
     pub direction: PortDirection,
-    pub dimensions: Vec<(u32,u32)>,
+    pub dimensions: Vec<(u32, u32)>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Default, Debug)]
@@ -99,10 +100,7 @@ impl FromStr for Port {
                 direction,
                 dimensions,
             };
-            Ok(Port {
-                name,
-                properties,
-            })
+            Ok(Port { name, properties })
         } else {
             Err(Self::Err::InvalidPortDescription(s.to_string()))
         }

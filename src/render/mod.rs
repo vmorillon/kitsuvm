@@ -6,7 +6,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 
-use log::{trace, debug, info, error};
+use log::{debug, error, info, trace};
 use tera::Tera;
 
 use crate::cli::Args;
@@ -40,7 +40,7 @@ impl Mode {
                     "pkg".to_string(),
                     "seq_lib".to_string(),
                     "sequencer".to_string(),
-                    "tx".to_string()
+                    "tx".to_string(),
                 ]
             }
             Mode::Top(_, _, _) | Mode::STTop(_, _, _) => {
@@ -53,32 +53,19 @@ impl Mode {
                 ]
             }
             Mode::TopTest(_, _, _) => {
-                vec![
-                    "test".to_string(),
-                    "test_pkg".to_string(),
-                ]
+                vec!["test".to_string(), "test_pkg".to_string()]
             }
             Mode::TopTb(_, _, _) => {
-                vec![
-                    "tb".to_string(),
-                    "th".to_string(),
-                ]
+                vec!["tb".to_string(), "th".to_string()]
             }
             Mode::STTopTb(_, _, _) => {
-                vec![
-                    "tb".to_string(),
-                    "th".to_string(),
-                ]
+                vec!["tb".to_string(), "th".to_string()]
             }
             Mode::Bin(_, _) => {
-                vec![
-                    "run".to_string(),
-                ]
+                vec!["run".to_string()]
             }
             Mode::STBin(_, _) => {
-                vec![
-                    "self_test".to_string(),
-                ]
+                vec!["self_test".to_string()]
             }
         }
     }
@@ -86,9 +73,13 @@ impl Mode {
     fn get_output_directory_path(&self, cli: &Args) -> String {
         match self {
             Mode::VIP(vip) => format!("{}/vip/{}", cli.output.clone(), vip.name),
-            Mode::Top(top, _, _) | Mode::STTop(top, _, _) => format!("{}/{}", cli.output.clone(), top.name),
+            Mode::Top(top, _, _) | Mode::STTop(top, _, _) => {
+                format!("{}/{}", cli.output.clone(), top.name)
+            }
             Mode::TopTest(top, _, _) => format!("{}/{}/test", cli.output.clone(), top.name),
-            Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => format!("{}/{}/tb", cli.output.clone(), top.name),
+            Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => {
+                format!("{}/{}/tb", cli.output.clone(), top.name)
+            }
             Mode::Bin(_, _) | Mode::STBin(_, _) => format!("{}/bin", cli.output.clone()),
         }
     }
@@ -96,9 +87,13 @@ impl Mode {
     fn get_output_filename(&self, component: String) -> String {
         match self {
             Mode::VIP(vip) => format!("{}_{}.sv", vip.name, component),
-            Mode::Top(top, _, _) | Mode::STTop(top, _, _) => format!("{}_{}.sv", top.name, component),
+            Mode::Top(top, _, _) | Mode::STTop(top, _, _) => {
+                format!("{}_{}.sv", top.name, component)
+            }
             Mode::TopTest(top, _, _) => format!("{}_{}.sv", top.name, component),
-            Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => format!("{}_{}.sv", top.name, component),
+            Mode::TopTb(top, _, _) | Mode::STTopTb(top, _, _) => {
+                format!("{}_{}.sv", top.name, component)
+            }
             Mode::Bin(_, _) => format!("{}.sh", component),
             Mode::STBin(_, vips) => format!("{}_{}.sh", vips[0].name, component),
         }
@@ -174,7 +169,13 @@ impl Mode {
     }
 }
 
-fn get_vips_clk_rst_ports(vips: &Vec<VIP>) -> (HashMap<String,String>, HashMap<String,String>, HashMap<String,Vec<String>>) {
+fn get_vips_clk_rst_ports(
+    vips: &Vec<VIP>,
+) -> (
+    HashMap<String, String>,
+    HashMap<String, String>,
+    HashMap<String, Vec<String>>,
+) {
     let mut vips_clk = HashMap::new();
     for v in vips {
         if let Some(clk) = v.clock.clone() {
@@ -220,7 +221,7 @@ fn render(mode: Mode, tera_dir: &Tera, cli: &Args) {
 
                 let mut file = File::create(output_path).unwrap();
                 file.write_all(render.as_bytes()).unwrap();
-            },
+            }
             Err(e) => {
                 error!("{}", e);
                 let mut cause = e.source();
@@ -233,7 +234,13 @@ fn render(mode: Mode, tera_dir: &Tera, cli: &Args) {
     }
 }
 
-pub fn render_self_test(tera_dir: &Tera, vip: &VIP, instances: &Instances, cli: &Args, project: &Project) {
+pub fn render_self_test(
+    tera_dir: &Tera,
+    vip: &VIP,
+    instances: &Instances,
+    cli: &Args,
+    project: &Project,
+) {
     let name = format!("{}_st", vip.name);
     let top = Top {
         name,
@@ -255,7 +262,13 @@ pub fn render_self_test(tera_dir: &Tera, vip: &VIP, instances: &Instances, cli: 
     }
 }
 
-pub fn render_top(tera_dir: &Tera, vips: &Vec<VIP>, instances: &Instances, cli: &Args, project: &Project) {
+pub fn render_top(
+    tera_dir: &Tera,
+    vips: &Vec<VIP>,
+    instances: &Instances,
+    cli: &Args,
+    project: &Project,
+) {
     let top = Top {
         name: "top".to_string(),
         default_sequence_repeat: project.top_default_sequence,

@@ -1,15 +1,15 @@
+pub mod instance;
 pub mod project;
 pub mod vip;
-pub mod instance;
 
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
-use log::{trace, debug, info, warn, error};
+use log::{debug, error, info, trace, warn};
 
+use instance::Instances;
 use project::Project;
 use vip::VIP;
-use instance::Instances;
 
 use crate::cli::Args;
 use crate::dut::utils::DUT;
@@ -99,10 +99,20 @@ pub fn check_i_v_compat(instances: &Instances, vips: &Vec<VIP>) {
                         debug!("all ports connected {}", i);
                     }
                     Ordering::Greater => {
-                        warn!("found less connected ports than declared in {}\ngot {} expected {}", i, i.connected_to.len(), ports.len());
+                        warn!(
+                            "found less connected ports than declared in {}\ngot {} expected {}",
+                            i,
+                            i.connected_to.len(),
+                            ports.len()
+                        );
                     }
                     Ordering::Less => {
-                        error!("found more connected ports than declared in {}\ngot {} expected {}", i, i.connected_to.len(), ports.len());
+                        error!(
+                            "found more connected ports than declared in {}\ngot {} expected {}",
+                            i,
+                            i.connected_to.len(),
+                            ports.len()
+                        );
                     }
                 }
             }
