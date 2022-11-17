@@ -26,8 +26,11 @@ pub fn parse_config_files(cli: &Args) -> (Project, Instances, Vec<VIP>) {
 
 pub fn parse_project_file(path: String) -> Project {
     info!("reading project {}", path);
-    let project_str = std::fs::read_to_string(path).unwrap();
-    let mut project: Project = toml::from_str(&project_str).unwrap();
+    let project_str = std::fs::read_to_string(&path).unwrap();
+    let mut project: Project = toml::from_str(&project_str).unwrap_or_else(|e| {
+        error!("{}", e);
+        panic!("bad project file {}", path);
+    });
     if project.dut.name == None {
         let name = get_name_from_file_path(project.dut.path.clone());
         debug!("default dut name to {}", name);
@@ -40,8 +43,11 @@ pub fn parse_project_file(path: String) -> Project {
 
 pub fn parse_instances_file(path: String) -> Instances {
     info!("reading instances {}", path);
-    let instances_str = std::fs::read_to_string(path).unwrap();
-    let instances: Instances = toml::from_str(&instances_str).unwrap();
+    let instances_str = std::fs::read_to_string(&path).unwrap();
+    let instances: Instances = toml::from_str(&instances_str).unwrap_or_else(|e| {
+        error!("{}", e);
+        panic!("bad instances file {}", path);
+    });
 
     trace!("instances parsed:\n{:#?}", instances);
     instances
@@ -53,7 +59,10 @@ pub fn parse_vip_files(paths: &Vec<String>) -> Vec<VIP> {
     for path in paths {
         info!("reading vip template {}", path);
         let vip_str = std::fs::read_to_string(&path).unwrap();
-        let mut vip: VIP = toml::from_str(&vip_str).unwrap();
+        let mut vip: VIP = toml::from_str(&vip_str).unwrap_or_else(|e| {
+            error!("{}", e);
+            panic!("bad vip file {}", path);
+        });
         if vip.name == None {
             let name = get_name_from_file_path(path.clone());
             debug!("default vip name to {}", name);

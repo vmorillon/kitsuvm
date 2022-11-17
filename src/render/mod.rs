@@ -303,13 +303,10 @@ pub fn get_tera_dir(cli: &Args) -> Tera {
     let templates_realpath = std::fs::canonicalize(&cli.templates).unwrap();
     let templates_query = format!("{}/**/*.j2", templates_realpath.to_str().unwrap());
     info!("loading tera templates from {}", templates_query);
-    let mut tera_dir = match Tera::new(&templates_query) {
-        Ok(t) => t,
-        Err(e) => {
-            error!("Parsing error(s): {}", e);
-            panic!();
-        }
-    };
+    let mut tera_dir = Tera::new(&templates_query).unwrap_or_else(|e| {
+        error!("{}", e);
+        panic!("bad template file in {}", templates_query);
+    });
     let names: Vec<_> = tera_dir.get_template_names().collect();
     trace!("loaded templates:\n{:#?}", names);
     tera_dir.autoescape_on(vec![]);
