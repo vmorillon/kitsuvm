@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "aho-corasick"
-version = "0.7.15"
+version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7404febffaa47dac81aa44dba71523c9d069b1bdc50a77db41195149e17f68e5"
+checksum = "b4f55bd91a0978cbfd91c457a164bab8b4001c833b7f323132c0a4e1922dd44e"
 dependencies = [
  "memchr",
 ]
@@ -497,9 +497,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.3.4"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
+checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
 name = "nom"
@@ -514,9 +514,9 @@ dependencies = [
 
 [[package]]
 name = "nom"
-version = "6.2.1"
+version = "6.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c5c51b9083a3c620fa67a2a635d1ce7d95b897e957d6b28ff9a5da960a103a6"
+checksum = "e7413f999671bd4745a7b624bd370a569fb6bc574b23c83a3c5ed2e453f3d5e2"
 dependencies = [
  "bitvec",
  "funty",
@@ -532,7 +532,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "133e5024c0b65c4235e3200a3b6e30f3875475f1e452525e1a421b7f2a997c52"
 dependencies = [
  "nom 5.1.2",
- "nom 6.2.1",
+ "nom 6.1.2",
  "nom_locate 1.0.0",
  "nom_locate 2.1.0",
  "nom_locate 3.0.2",
@@ -586,7 +586,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "128b58b88f084359e18858edde832830041e0a561d23bb214e656e00972de316"
 dependencies = [
- "nom 6.2.1",
+ "nom 6.1.2",
  "nom-tracable-macros",
  "nom_locate 1.0.0",
  "nom_locate 3.0.2",
@@ -632,7 +632,7 @@ checksum = "4689294073dda8a54e484212171efdcb6b12b1908fd70c3dc3eec15b8833b06d"
 dependencies = [
  "bytecount 0.6.3",
  "memchr",
- "nom 6.2.1",
+ "nom 6.1.2",
 ]
 
 [[package]]
@@ -850,9 +850,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.4.6"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a26af418b574bd56588335b3a3659a65725d4e636eb1016c2f9e3b38c7cc759"
+checksum = "e076559ef8e241f2ae3479e36f97bd5741c0330689e217ad51ce2c76808b868a"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -967,7 +967,7 @@ version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed6567e4ff8c8f26fbd561e8797f2bf658462b68346d481d9a53f9390873688d"
 dependencies = [
- "nom 6.2.1",
+ "nom 6.1.2",
  "nom-greedyerror",
  "sv-parser-error",
  "sv-parser-parser",
@@ -1000,7 +1000,7 @@ version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4628479b05874500c1227228f481e04e9aaf858bc43eecd87fbbf4b6999b7269"
 dependencies = [
- "nom 6.2.1",
+ "nom 6.1.2",
  "nom-greedyerror",
  "nom-packrat",
  "nom-recursive",
@@ -1017,7 +1017,7 @@ version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db489604d13d9f630173a477357a0010d310597df4728a35bc54409af72ebb3c"
 dependencies = [
- "nom 6.2.1",
+ "nom 6.1.2",
  "nom-greedyerror",
  "sv-parser-error",
  "sv-parser-parser",
